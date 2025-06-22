@@ -24,11 +24,11 @@ public class Main {
 
         var app = Javalin.create().get("/", ctx -> ctx.result("Hello World")).start(PORT_NUMBER);
 
-        app.get("/users/:id", userController::getUserById);
-        app.get("/users/:username", userController::getUserByUsername);
+        app.get("/users/<id>", userController::getUserById);
+        app.get("/users/<username>", userController::getUserByUsername);
         app.post("/users", userController::createUser);
-        // app.put("/users/:id", userController::updateUser);
-        // app.delete("/users/:id", userController::deleteUser);
+        app.put("/users/<id>", userController::updateUser);
+        app.delete("/users/<id>", userController::deleteUser);
 
     }
 }
