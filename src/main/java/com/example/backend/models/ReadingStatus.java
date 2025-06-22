@@ -1,0 +1,26 @@
+package com.example.backend.models;
+
+public enum ReadingStatus {
+  NOT_STARTED("Not Started"),
+  IN_PROGRESS("In Progress"),
+  COMPLETED("Completed");
+
+  private final String status;
+
+  ReadingStatus(String status) {
+    this.status = status;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public static ReadingStatus fromString(String status) {
+    for (ReadingStatus readingStatus : ReadingStatus.values()) {
+      if (readingStatus.status.equalsIgnoreCase(status)) {
+        return readingStatus;
+      }
+    }
+    throw new IllegalArgumentException("No constant with text " + status + " found");
+  }
+}
