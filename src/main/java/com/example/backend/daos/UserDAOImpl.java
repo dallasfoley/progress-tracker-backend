@@ -33,7 +33,7 @@ public class UserDAOImpl implements UserDAO {
   }
 
   @Override
-  public User getUserById(int id) {
+  public User findUserById(int id) {
     try {
       conn = ConnectionManager.getConnection();
       PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE id = ?");
@@ -55,7 +55,7 @@ public class UserDAOImpl implements UserDAO {
   }
 
   @Override
-  public User getUserByUsername(String username) {
+  public User findUserByUsername(String username) {
     try {
       conn = ConnectionManager.getConnection();
       PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE username = ?");

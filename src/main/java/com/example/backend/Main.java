@@ -22,13 +22,38 @@ public class Main {
         BookController bookController = new BookController(bookDAO);
         UserBookController userBookController = new UserBookController(userBookDAO);
 
-        var app = Javalin.create().get("/", ctx -> ctx.result("Hello World")).start(PORT_NUMBER);
+        var app = Javalin.create(config -> {
+            config.bundledPlugins.enableCors(cors -> {
+                cors.addRule(it -> {
+                    it.allowHost("localhost:3000");
+                });
+            });
+        }).get("/", ctx -> ctx.result("Hello World")).start(PORT_NUMBER);
 
-        app.get("/users/<id>", userController::getUserById);
-        app.get("/users/<username>", userController::getUserByUsername);
-        app.post("/users", userController::createUser);
-        app.put("/users/<id>", userController::updateUser);
-        app.delete("/users/<id>", userController::deleteUser);
+        app.before("/api/*", ctx -> {
+            ctx.contentType("application/json");
+        });
+
+        app.get("/api/users/<id>", userController::findUserById);
+        app.get("/api/users/username/<username>", userController::findUserByUsername);
+        app.post("/api/users", userController::createUser);
+        app.put("/api/users/<id>", userController::updateUser);
+        app.delete("/api/users/<id>", userController::deleteUser);
+
+        app.get("/api/books", bookController::findAll);
+        app.get("/api/books/<id>", bookController::findBookById);
+        app.get("/api/books/title", bookController::findBooksByTitle);
+        app.get("/api/books/author", bookController::findBooksByAuthor);
+        app.post("/api/books", bookController::save);
+        app.delete("/api/books/<id>", bookController::delete);
+        app.put("/api/books/<id>", bookController::update);
+
+        app.get("/api/user_books/<userId>/<bookId>", userBookController::findById);
+        app.get("/api/user_books/<userId>", userBookController::findByUserId);
+        app.post("/api/user_books/<userId>/<bookId>", userBookController::save);
+        app.delete("/api/user_books/<userId>/<bookId>", userBookController::delete);
+        app.patch("/api/user_books/status", userBookController::updateStatus);
+        app.patch("/api/user_books/page", userBookController::updateCurrentPage);
 
     }
 }

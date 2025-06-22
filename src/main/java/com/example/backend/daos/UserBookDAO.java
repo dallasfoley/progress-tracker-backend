@@ -11,9 +11,7 @@ public interface UserBookDAO {
 
   List<UserBook> findByUserId(int userId);
 
-  List<UserBook> findByBookId(int userId, int bookId);
-
-  boolean save(UserBook userBook);
+  boolean save(int userId, int bookId);
 
   boolean delete(int userId, int bookId);
 

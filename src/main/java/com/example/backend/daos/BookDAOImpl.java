@@ -16,29 +16,6 @@ public class BookDAOImpl implements BookDAO {
   private Connection conn;
 
   @Override
-  public Book findById(int id) {
-    try {
-      conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn.prepareStatement("SELECT * FROM books WHERE id = ?");
-      ps.setInt(1, id);
-      ResultSet rs = ps.executeQuery();
-      if (rs.next()) {
-        Book book = new Book();
-        book.setId(rs.getInt("id"));
-        book.setTitle(rs.getString("title"));
-        book.setAuthor(rs.getString("author"));
-        book.setYearPublished(rs.getInt("year_published"));
-        book.setGenre(rs.getString("genre"));
-        book.setRating(rs.getDouble("rating"));
-        return book;
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
-
-  @Override
   public List<Book> findAll() {
     List<Book> books = new ArrayList<>();
     try {
@@ -62,36 +39,26 @@ public class BookDAOImpl implements BookDAO {
   }
 
   @Override
-  public boolean save(Book book) {
+  public Book findById(int id) {
     try {
       conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn.prepareStatement(
-          "INSERT INTO books (title, author, year_published, genre, rating) VALUES (?, ?, ?, ?, ?)");
-      ps.setString(1, book.getTitle());
-      ps.setString(2, book.getAuthor());
-      ps.setInt(3, book.getYearPublished());
-      ps.setString(4, book.getGenre());
-      ps.setDouble(5, book.getRating());
-      int rowsAffected = ps.executeUpdate();
-      return rowsAffected > 0;
-    } catch (IOException | ClassNotFoundException | SQLException e) {
-      e.printStackTrace();
-      return false;
-    }
-  }
-
-  @Override
-  public boolean delete(int id) {
-    try {
-      conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn.prepareStatement("DELETE FROM books WHERE id = ?");
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM books WHERE id = ?");
       ps.setInt(1, id);
-      int rowsAffected = ps.executeUpdate();
-      return rowsAffected > 0;
-    } catch (IOException | ClassNotFoundException | SQLException e) {
+      ResultSet rs = ps.executeQuery();
+      if (rs.next()) {
+        Book book = new Book();
+        book.setId(rs.getInt("id"));
+        book.setTitle(rs.getString("title"));
+        book.setAuthor(rs.getString("author"));
+        book.setYearPublished(rs.getInt("year_published"));
+        book.setGenre(rs.getString("genre"));
+        book.setRating(rs.getDouble("rating"));
+        return book;
+      }
+    } catch (Exception e) {
       e.printStackTrace();
-      return false;
     }
+    return null;
   }
 
   @Override
@@ -141,4 +108,37 @@ public class BookDAOImpl implements BookDAO {
     }
     return books;
   }
+
+  @Override
+  public boolean save(String title, String author, int yearPublished, String genre) {
+    try {
+      conn = ConnectionManager.getConnection();
+      PreparedStatement ps = conn.prepareStatement(
+          "INSERT INTO books (title, author, year_published, genre) VALUES (?, ?, ?, ?)");
+      ps.setString(1, title);
+      ps.setString(2, author);
+      ps.setInt(3, yearPublished);
+      ps.setString(4, genre);
+      int rowsAffected = ps.executeUpdate();
+      return rowsAffected > 0;
+    } catch (IOException | ClassNotFoundException | SQLException e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
+  @Override
+  public boolean delete(int id) {
+    try {
+      conn = ConnectionManager.getConnection();
+      PreparedStatement ps = conn.prepareStatement("DELETE FROM books WHERE id = ?");
+      ps.setInt(1, id);
+      int rowsAffected = ps.executeUpdate();
+      return rowsAffected > 0;
+    } catch (IOException | ClassNotFoundException | SQLException e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
 }

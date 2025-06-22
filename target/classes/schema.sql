@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS books (
     author VARCHAR(50) NOT NULL,
     year_published INT,
     genre VARCHAR(50),
-    rating DECIMAL(2, 1) CHECK (rating >= 0 AND rating <= 5),
+    rating DECIMAL(2, 1) CHECK (rating >= 0 AND rating <= 5) DEFAULT 0,
     page_count INT CHECK (page_count > 0),
 );
 

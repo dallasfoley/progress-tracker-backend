@@ -10,7 +10,7 @@ public interface BookDAO {
 
   public List<Book> findAll();
 
-  public boolean save(Book book);
+  public boolean save(String title, String author, int yearPublished, String genre);
 
   public boolean delete(int id);
 

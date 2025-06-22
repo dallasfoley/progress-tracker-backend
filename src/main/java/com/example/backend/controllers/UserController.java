@@ -13,14 +13,14 @@ public class UserController {
     this.userDAO = userDAO;
   }
 
-  public void getUserById(Context ctx) {
+  public void findUserById(Context ctx) {
     try {
       int id = Integer.parseInt(ctx.pathParam("id"));
-      var user = userDAO.getUserById(id);
+      var user = userDAO.findUserById(id);
       if (user == null) {
         ctx.status(404).result("User not found");
       } else {
-        ctx.json(user);
+        ctx.json(user).status(200);
       }
     } catch (Exception e) {
       ctx.status(500).result("Internal Server Error");
@@ -28,14 +28,14 @@ public class UserController {
     }
   }
 
-  public void getUserByUsername(Context ctx) {
+  public void findUserByUsername(Context ctx) {
     try {
       String username = ctx.pathParam("username");
-      var user = userDAO.getUserByUsername(username);
+      var user = userDAO.findUserByUsername(username);
       if (user == null) {
         ctx.status(404).result("User not found");
       } else {
-        ctx.json(user);
+        ctx.json(user).status(200);
       }
     } catch (Exception e) {
       ctx.status(500).result("Internal Server Error");

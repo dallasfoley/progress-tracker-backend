@@ -10,12 +10,13 @@ public class UserBook {
   private int currentPage;
 
   public UserBook() {
+
   }
 
   public UserBook(int userId, int bookId, ReadingStatus status) {
     this.userId = userId;
     this.bookId = bookId;
-    this.status = status;
+    this.status = ReadingStatus.NOT_STARTED;
     this.userRating = 0;
     this.currentPage = 0;
   }

@@ -7,9 +7,9 @@ public interface UserDAO {
 
   boolean save(String username, String email, String password) throws UserNotCreatedException;
 
-  User getUserById(int id);
+  User findUserById(int id);
 
-  User getUserByUsername(String username);
+  User findUserByUsername(String username);
 
   boolean updateUser(User user);
 
