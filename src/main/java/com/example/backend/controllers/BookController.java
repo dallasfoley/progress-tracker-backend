@@ -21,7 +21,7 @@ public class BookController {
       if (books.isEmpty()) {
         ctx.status(500).result("Internal Server Error");
       } else {
-        ctx.json(books).status(200).result("Books found successfully");
+        ctx.json(books).status(200);
       }
     } catch (Exception e) {
       ctx.status(500).result("Internal Server Error");

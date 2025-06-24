@@ -9,6 +9,8 @@ public class Book {
   private String genre;
   private double rating;
   private int pageCount;
+  private String coverUrl;
+  private String description;
 
   public Book() {
 
@@ -77,5 +79,21 @@ public class Book {
 
   public void setPageCount(int pageCount) {
     this.pageCount = pageCount;
+  }
+
+  public String getCoverUrl() {
+    return coverUrl;
+  }
+
+  public void setCoverUrl(String coverUrl) {
+    this.coverUrl = coverUrl;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 }

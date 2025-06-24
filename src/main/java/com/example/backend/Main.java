@@ -1,8 +1,10 @@
 package com.example.backend;
 
+import com.example.backend.controllers.AuthController;
 import com.example.backend.controllers.BookController;
 import com.example.backend.controllers.UserBookController;
 import com.example.backend.controllers.UserController;
+import com.example.backend.daos.AuthDAOImpl;
 import com.example.backend.daos.BookDAOImpl;
 import com.example.backend.daos.UserBookDAOImpl;
 import com.example.backend.daos.UserDAOImpl;
@@ -17,15 +19,19 @@ public class Main {
         UserDAOImpl userDAO = new UserDAOImpl();
         BookDAOImpl bookDAO = new BookDAOImpl();
         UserBookDAOImpl userBookDAO = new UserBookDAOImpl();
+        AuthDAOImpl authDAO = new AuthDAOImpl();
 
         UserController userController = new UserController(userDAO);
         BookController bookController = new BookController(bookDAO);
         UserBookController userBookController = new UserBookController(userBookDAO);
+        AuthController authController = new AuthController(authDAO);
 
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(it -> {
                     it.allowHost("localhost:3000");
+                    it.allowCredentials = true;
+                    it.exposeHeader("Authorization");
                 });
             });
         }).get("/", ctx -> ctx.result("Hello World")).start(PORT_NUMBER);
@@ -54,6 +60,14 @@ public class Main {
         app.delete("/api/user_books/<userId>/<bookId>", userBookController::delete);
         app.patch("/api/user_books/status", userBookController::updateStatus);
         app.patch("/api/user_books/page", userBookController::updateCurrentPage);
+
+        app.post("/api/auth/register", authController::register);
+        app.post("api/auth/login/username", authController::loginWithUsernamePassword);
+        app.post("api/auth/login/email", authController::loginWithEmailPassword);
+
+        app.error(400, ctx -> {
+            System.out.println("400 Error triggered at path: " + ctx.path());
+        });
 
     }
 }

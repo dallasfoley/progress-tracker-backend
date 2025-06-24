@@ -30,6 +30,9 @@ public class BookDAOImpl implements BookDAO {
         book.setYearPublished(rs.getInt("year_published"));
         book.setGenre(rs.getString("genre"));
         book.setRating(rs.getDouble("rating"));
+        book.setPageCount(rs.getInt("page_count"));
+        book.setGenre(rs.getString("genre"));
+        book.setCoverUrl(rs.getString("cover_url"));
         books.add(book);
       }
     } catch (IOException | ClassNotFoundException | SQLException e) {
@@ -53,6 +56,9 @@ public class BookDAOImpl implements BookDAO {
         book.setYearPublished(rs.getInt("year_published"));
         book.setGenre(rs.getString("genre"));
         book.setRating(rs.getDouble("rating"));
+        book.setPageCount(rs.getInt("page_count"));
+        book.setGenre(rs.getString("genre"));
+        book.setCoverUrl(rs.getString("cover_image"));
         return book;
       }
     } catch (Exception e) {
@@ -77,6 +83,9 @@ public class BookDAOImpl implements BookDAO {
         book.setYearPublished(rs.getInt("year_published"));
         book.setGenre(rs.getString("genre"));
         book.setRating(rs.getDouble("rating"));
+        book.setPageCount(rs.getInt("page_count"));
+        book.setGenre(rs.getString("genre"));
+        book.setCoverUrl(rs.getString("cover_url"));
         books.add(book);
       }
     } catch (IOException | ClassNotFoundException | SQLException e) {
@@ -101,6 +110,9 @@ public class BookDAOImpl implements BookDAO {
         book.setYearPublished(rs.getInt("year_published"));
         book.setGenre(rs.getString("genre"));
         book.setRating(rs.getDouble("rating"));
+        book.setPageCount(rs.getInt("page_count"));
+        book.setGenre(rs.getString("genre"));
+        book.setCoverUrl(rs.getString("cover_url"));
         books.add(book);
       }
     } catch (IOException | ClassNotFoundException | SQLException e) {
