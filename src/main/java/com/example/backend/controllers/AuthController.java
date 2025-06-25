@@ -122,4 +122,32 @@ public class AuthController {
     }
 
   }
+
+  public void refreshAccessToken(Context ctx) {
+    String refreshToken = ctx.cookie("refreshToken");
+
+    if (refreshToken == null) {
+      ctx.status(401).json(Map.of("error", "Missing refresh token"));
+      return;
+    }
+
+    var decodedJWT = JwtUtils.validateRefreshToken(refreshToken);
+    if (decodedJWT == null) {
+      ctx.status(403).json(Map.of("error", "Invalid refresh token"));
+      return;
+    }
+
+    String username = decodedJWT.getSubject();
+    String newAccessToken = JwtUtils.generateAccessToken(username);
+
+    ctx.header("Authorization", "Bearer " + newAccessToken);
+    ctx.json(Map.of("accessToken", newAccessToken, "tokenType", "Bearer")).status(200);
+  }
+
+  public void logout(Context ctx) {
+    ctx.cookie("accessToken", "", -1);
+    ctx.cookie("refreshToken", "", -1);
+    ctx.status(200).json(Map.of("message", "Logout successful")).status(200);
+  }
+
 }

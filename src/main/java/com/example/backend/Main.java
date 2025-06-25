@@ -73,6 +73,8 @@ public class Main {
         app.post("/api/auth/register", authController::register);
         app.post("api/auth/login/username", authController::loginWithUsernamePassword);
         app.post("api/auth/login/email", authController::loginWithEmailPassword);
+        app.post("api/auth/refresh", authController::refreshAccessToken);
+        app.get("api/auth/logout", authController::logout);
 
         app.error(400, ctx -> {
             System.out.println("400 Error triggered at path: " + ctx.path());

@@ -103,6 +103,7 @@ public class UserDAOImpl implements UserDAO {
       int rowsAffected = ps.executeUpdate();
       return rowsAffected > 0;
     } catch (Exception e) {
+      System.out.println(e.getMessage());
       e.printStackTrace();
       return false;
     }

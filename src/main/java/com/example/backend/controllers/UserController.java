@@ -1,5 +1,7 @@
 package com.example.backend.controllers;
 
+import java.util.Map;
+
 import com.example.backend.daos.UserDAOImpl;
 import com.example.backend.models.User;
 
@@ -92,12 +94,14 @@ public class UserController {
 
   public void deleteUser(Context ctx) {
     try {
+      System.out.println(ctx.path());
       int id = Integer.parseInt(ctx.pathParam("id"));
       boolean isDeleted = userDAO.deleteUser(id);
       if (isDeleted != false) {
-        ctx.status(400).result("User not found");
+        ctx.status(400).json(Map.of("error", "User not found"));
       } else {
-        ctx.status(200).result("User deleted successfully");
+        System.out.println("User deleted successfully");
+        ctx.status(200).json(Map.of("message", "User deleted successfully"));
       }
     } catch (Exception e) {
       ctx.status(500).result("Internal Server Error");
