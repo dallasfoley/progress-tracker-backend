@@ -31,13 +31,21 @@ public class Main {
                 cors.addRule(it -> {
                     it.allowHost("localhost:3000");
                     it.allowCredentials = true;
+                    it.exposeHeader("Content-Type");
+                    it.exposeHeader("Set-Cookie");
                     it.exposeHeader("Authorization");
+                    it.exposeHeader("X-Requested-With");
+                    it.exposeHeader("Accept");
+                    it.exposeHeader("Access-Control-Allow-Origin");
+                    it.exposeHeader("Access-Control-Allow-Credentials");
                 });
             });
         }).get("/", ctx -> ctx.result("Hello World")).start(PORT_NUMBER);
 
         app.before("/api/*", ctx -> {
             ctx.contentType("application/json");
+            ctx.header("Access-Control-Allow-Origin", "http://localhost:3000");
+            ctx.header("Access-Control-Allow-Credentials", "true");
         });
 
         app.get("/api/users/<id>", userController::findUserById);

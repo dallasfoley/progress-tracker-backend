@@ -2,20 +2,22 @@ package com.example.backend.controllers;
 
 import java.util.Map;
 
-import com.example.backend.daos.AuthDAO;
+import com.example.backend.daos.AuthDAOImpl;
 import com.example.backend.models.User;
+import com.example.backend.utils.JwtUtils;
 
 import io.javalin.http.Context;
 
 public class AuthController {
 
-  private final AuthDAO authDAO;
+  private final AuthDAOImpl authDAO;
 
-  public AuthController(AuthDAO authDAO) {
+  public AuthController(AuthDAOImpl authDAO) {
     this.authDAO = authDAO;
   }
 
   public void register(Context ctx) {
+    System.out.println(ctx.path());
     try {
       String username = ctx.formParam("username");
       String email = ctx.formParam("email");
@@ -23,10 +25,22 @@ public class AuthController {
 
       User user = authDAO.register(username, email, password);
       if (user != null) {
-        ctx.json(user).status(201);
+        System.out.println("generating tokens");
+        String accessToken = JwtUtils.generateAccessToken(username);
+        ctx.cookie("accessToken", accessToken, 60 * 60); // 1 hour
+
+        // Set CORS headers to allow credentials
+        ctx.header("Access-Control-Allow-Credentials", "true");
+        ctx.header("Access-Control-Allow-Origin", "http://localhost:3000");
+        ctx.json(Map.of(
+            "success", true,
+            "message", "User registered successfully",
+            "data", user,
+            "accessToken", accessToken)).status(201);
       }
     } catch (RuntimeException e) {
       String errorMessage = e.getMessage();
+      e.printStackTrace();
 
       if (errorMessage.contains("Username already exists")) {
         ctx.status(409).json(Map.of("error", "Username is already registered"));
@@ -56,7 +70,15 @@ public class AuthController {
 
       User user = authDAO.loginWithEmailPassword(email, password);
       if (user != null) {
-        ctx.json(user).status(200);
+        String accessToken = JwtUtils.generateAccessToken(email);
+        ctx.header("Authorization", "Bearer " + accessToken);
+        ctx.header("Access-Control-Allow-Credentials", "true");
+        ctx.header("Access-Control-Allow-Origin", "http://localhost:3000");
+        ctx.json(Map.of(
+            "success", true,
+            "message", "User logged in successfully",
+            "data", user,
+            "accessToken", accessToken)).status(201);
       }
     } catch (RuntimeException e) {
       e.printStackTrace();
@@ -79,8 +101,15 @@ public class AuthController {
 
       User user = authDAO.loginWithUsernamePassword(username, password);
       if (user != null) {
-        ctx.status(200);
-        ctx.json(user);
+        String accessToken = JwtUtils.generateAccessToken(username);
+        ctx.header("Authorization", "Bearer " + accessToken);
+        ctx.header("Access-Control-Allow-Credentials", "true");
+        ctx.header("Access-Control-Allow-Origin", "http://localhost:3000");
+        ctx.json(Map.of(
+            "success", true,
+            "message", "User registered successfully",
+            "data", user,
+            "accessToken", accessToken)).status(201);
       } else {
         ctx.status(401).result("Invalid email or password");
       }

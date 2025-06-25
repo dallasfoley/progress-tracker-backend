@@ -24,11 +24,8 @@ public class AuthDAOImpl implements AuthDAO {
       ps.setString(3, password);
       int rowsAffected = ps.executeUpdate();
       if (rowsAffected > 0) {
-        ResultSet generatedKeys = ps.getGeneratedKeys();
-        if (generatedKeys.next()) {
-          int id = generatedKeys.getInt(1);
-          return new User(id, username, email, password);
-        }
+        int id = PreparedStatement.RETURN_GENERATED_KEYS;
+        return new User(id, username, email, password);
       }
     } catch (SQLIntegrityConstraintViolationException e) {
       String errorMessage = e.getMessage().toLowerCase();
