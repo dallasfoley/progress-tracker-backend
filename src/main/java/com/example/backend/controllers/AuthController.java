@@ -1,6 +1,5 @@
 package com.example.backend.controllers;
 
-import java.sql.SQLException;
 import java.util.Map;
 
 import com.example.backend.daos.AuthDAO;

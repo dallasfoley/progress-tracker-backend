@@ -1,7 +1,6 @@
 package com.example.backend.dtos;
 
 import com.example.backend.models.ReadingStatus;
-import com.example.backend.models.UserBook;
 
 public class UserBookDetails {
   private int userId;

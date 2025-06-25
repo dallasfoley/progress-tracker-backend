@@ -117,7 +117,7 @@ public class UserBookDAOImpl implements UserBookDAO {
       conn = ConnectionManager.getConnection();
       PreparedStatement ps = conn
           .prepareStatement("UPDATE user_books SET status = ? WHERE user_id = ? AND book_id = ?");
-      ps.setString(1, status.name());
+      ps.setString(1, status.getStatus());
       ps.setInt(2, userId);
       ps.setInt(3, bookId);
       int rowsAffected = ps.executeUpdate();

@@ -58,8 +58,9 @@ public class Main {
         app.get("/api/user_books/<userId>", userBookController::findByUserId);
         app.post("/api/user_books/<userId>/<bookId>", userBookController::save);
         app.delete("/api/user_books/<userId>/<bookId>", userBookController::delete);
-        app.patch("/api/user_books/status", userBookController::updateStatus);
-        app.patch("/api/user_books/page", userBookController::updateCurrentPage);
+        app.patch("/api/user_books/status/<userId>/<bookId>", userBookController::updateStatus);
+        app.patch("/api/user_books/page/<userId>/<bookId>", userBookController::updateCurrentPage);
+        app.patch("/api/user_books/rating/<userId>/<bookId>", userBookController::updateRating);
 
         app.post("/api/auth/register", authController::register);
         app.post("api/auth/login/username", authController::loginWithUsernamePassword);

@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.example.backend.daos.UserBookDAOImpl;
 import com.example.backend.dtos.ApiResponseDTO;
+import com.example.backend.dtos.CurrentPageDTO;
+import com.example.backend.dtos.UpdateStatusDTO;
 import com.example.backend.dtos.UserBookDetails;
 import com.example.backend.models.ReadingStatus;
 import com.example.backend.models.UserBook;
@@ -123,14 +125,18 @@ public class UserBookController {
     try {
       int userId = Integer.parseInt(ctx.pathParam("userId"));
       int bookId = Integer.parseInt(ctx.pathParam("bookId"));
-      String statusField = ctx.formParam("status");
+
+      UpdateStatusDTO requestBody = ctx.bodyAsClass(UpdateStatusDTO.class);
+      ReadingStatus status = requestBody.getStatus();
+      String statusField = requestBody.getStatus().getStatus();
+
+      System.out.println("Received status: " + statusField);
 
       if (statusField == null || statusField.trim().isEmpty()) {
         ctx.json(ApiResponseDTO.error("Status is required")).status(400);
         return;
       }
 
-      ReadingStatus status = ReadingStatus.fromString(statusField);
       boolean success = userBookDAO.updateStatus(userId, bookId, status);
 
       if (success) {
@@ -149,24 +155,19 @@ public class UserBookController {
   }
 
   public void updateCurrentPage(Context ctx) {
+    System.out.println(ctx.path());
     try {
       int userId = Integer.parseInt(ctx.pathParam("userId"));
       int bookId = Integer.parseInt(ctx.pathParam("bookId"));
-      String pageParam = ctx.formParam("page");
+      int pageParam = ctx.bodyAsClass(CurrentPageDTO.class).getCurrentPage();
+      System.out.println("Received page: " + pageParam);
 
-      if (pageParam == null || pageParam.trim().isEmpty()) {
-        ctx.json(ApiResponseDTO.error("Page number is required")).status(400);
-        return;
-      }
-
-      int currentPage = Integer.parseInt(pageParam);
-
-      if (currentPage < 0) {
+      if (pageParam < 0) {
         ctx.json(ApiResponseDTO.error("Page number must be non-negative")).status(400);
         return;
       }
 
-      boolean success = userBookDAO.updateCurrentPage(userId, bookId, currentPage);
+      boolean success = userBookDAO.updateCurrentPage(userId, bookId, pageParam);
 
       if (success) {
         ctx.json(ApiResponseDTO.success("Current page updated successfully")).status(200);
@@ -176,6 +177,38 @@ public class UserBookController {
     } catch (NumberFormatException e) {
       ctx.json(ApiResponseDTO.error("Invalid user ID, book ID, or page number format")).status(400);
     } catch (Exception e) {
+      e.printStackTrace();
+      ctx.json(ApiResponseDTO.error("Internal server error")).status(500);
+    }
+  }
+
+  public void updateRating(Context ctx) {
+    System.out.println(ctx.path());
+    try {
+      int userId = Integer.parseInt(ctx.pathParam("userId"));
+      int bookId = Integer.parseInt(ctx.pathParam("bookId"));
+      int ratingParam = ctx.bodyAsClass(RatingDTO.class).getRating().getRating();
+      System.out.println("Received rating: " + ratingParam);
+
+      if (ratingParam < 0 || ratingParam > 5) {
+        ctx.json(ApiResponseDTO.error("Rating must be between 0 and 5")).status(400);
+        return;
+      }
+
+      boolean success = userBookDAO.updateRating(userId, bookId, ratingParam);
+
+      if (success) {
+        System.out.println("Rating updated successfully");
+        ctx.json(ApiResponseDTO.success("Rating updated successfully")).status(200);
+      } else {
+        System.out.println("Failed to update rating");
+        ctx.json(ApiResponseDTO.error("Failed to update rating")).status(400);
+      }
+    } catch (NumberFormatException e) {
+      System.out.println("Invalid user ID, book ID, or rating format");
+      ctx.json(ApiResponseDTO.error("Invalid user ID, book ID, or rating format")).status(400);
+    } catch (Exception e) {
+      System.out.println("Internal server error");
       e.printStackTrace();
       ctx.json(ApiResponseDTO.error("Internal server error")).status(500);
     }

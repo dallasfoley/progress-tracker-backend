@@ -1,9 +1,9 @@
 package com.example.backend.models;
 
 public enum ReadingStatus {
-  NOT_STARTED("Not Started"),
-  IN_PROGRESS("In Progress"),
-  COMPLETED("Completed");
+  NOT_STARTED("NOT_STARTED"),
+  IN_PROGRESS("IN_PROGRESS"),
+  COMPLETED("COMPLETED");
 
   private final String status;
 
