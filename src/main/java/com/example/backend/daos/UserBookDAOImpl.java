@@ -83,6 +83,14 @@ public class UserBookDAOImpl implements UserBookDAO {
       ps.setInt(4, userBook.getUserRating());
       ps.setInt(5, userBook.getCurrentPage());
       int rowsAffected = ps.executeUpdate();
+      if (rowsAffected > 0 && userBook.getStatus() == ReadingStatus.COMPLETED && userBook.getUserRating() > 0) {
+        PreparedStatement ps2 = conn.prepareStatement(
+            "UPDATE books SET rating = (SELECT AVG(user_rating) FROM user_books WHERE book_id = ? AND user_rating > 0) WHERE id = ?");
+        ps2.setInt(1, userBook.getBookId());
+        ps2.setInt(2, userBook.getBookId());
+        int rowsAffected2 = ps2.executeUpdate();
+        return rowsAffected2 > 0;
+      }
       return rowsAffected > 0;
     } catch (SQLException e) {
       e.printStackTrace();
@@ -100,10 +108,32 @@ public class UserBookDAOImpl implements UserBookDAO {
   public boolean delete(int userId, int bookId) {
     try {
       conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn.prepareStatement("DELETE FROM user_books WHERE user_id = ? AND book_id = ?");
+      PreparedStatement ps = conn.prepareStatement(
+          "DELETE FROM user_books WHERE user_id = ? AND book_id = ?");
       ps.setInt(1, userId);
       ps.setInt(2, bookId);
       int rowsAffected = ps.executeUpdate();
+      if (rowsAffected > 0) {
+        PreparedStatement ps1 = conn.prepareStatement(
+            "SELECT COUNT(*) FROM user_books WHERE book_id = ? AND user_rating > 0");
+        ps1.setInt(1, bookId);
+        ResultSet rs = ps1.executeQuery();
+        if (rs.next() && rs.getInt(1) == 0) {
+          PreparedStatement ps3 = conn.prepareStatement(
+              "UPDATE books SET rating = 0 WHERE id = ?");
+          ps3.setInt(1, bookId);
+          int rowsAffected3 = ps3.executeUpdate();
+          return rowsAffected3 > 0;
+        } else {
+          PreparedStatement ps2 = conn.prepareStatement(
+              "UPDATE books SET rating = (SELECT AVG(user_rating) FROM user_books WHERE book_id = ? AND user_rating > 0) WHERE id = ?");
+          ps2.setInt(1, bookId);
+          ps2.setInt(2, bookId);
+          int rowsAffected2 = ps2.executeUpdate();
+          return rowsAffected2 > 0;
+        }
+
+      }
       return rowsAffected > 0;
     } catch (Exception e) {
       e.printStackTrace();
@@ -132,13 +162,31 @@ public class UserBookDAOImpl implements UserBookDAO {
   public boolean updateRating(int userId, int bookId, int rating) {
     try {
       conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn
-          .prepareStatement("UPDATE user_books SET user_rating = ? WHERE user_id = ? AND book_id = ?");
-      ps.setInt(1, rating);
-      ps.setInt(2, userId);
-      ps.setInt(3, bookId);
-      int rowsAffected = ps.executeUpdate();
-      return rowsAffected > 0;
+      String updateUserRatingSQL = "UPDATE user_books SET user_rating = ? WHERE user_id = ? AND book_id = ?";
+      try (PreparedStatement ps1 = conn.prepareStatement(updateUserRatingSQL)) {
+        ps1.setInt(1, rating);
+        ps1.setInt(2, userId);
+        ps1.setInt(3, bookId);
+        int rowsAffected = ps1.executeUpdate();
+        if (rowsAffected == 0) {
+          return false;
+        }
+      }
+      String updateBookRatingSQL = """
+              UPDATE books
+              SET rating = (
+                  SELECT AVG(user_rating)
+                  FROM user_books
+                  WHERE book_id = ? AND user_rating > 0
+              )
+              WHERE id = ?
+          """;
+      try (PreparedStatement ps2 = conn.prepareStatement(updateBookRatingSQL)) {
+        ps2.setInt(1, bookId);
+        ps2.setInt(2, bookId);
+        ps2.executeUpdate();
+      }
+      return true;
     } catch (Exception e) {
       e.printStackTrace();
     }

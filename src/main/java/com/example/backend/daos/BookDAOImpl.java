@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.backend.connection.ConnectionManager;
+import com.example.backend.dtos.BookDetails;
 import com.example.backend.models.Book;
 
 public class BookDAOImpl implements BookDAO {
@@ -16,14 +17,16 @@ public class BookDAOImpl implements BookDAO {
   private Connection conn;
 
   @Override
-  public List<Book> findAll() {
-    List<Book> books = new ArrayList<>();
+  public List<BookDetails> findAll() {
+    List<BookDetails> books = new ArrayList<>();
     try {
       conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn.prepareStatement("SELECT * FROM books");
+      PreparedStatement ps = conn
+          .prepareStatement(
+              "SELECT b.*, SUM(CASE WHEN ub.status = 'IN_PROGRESS' THEN 1 ELSE 0 END) as in_progress_count, SUM(CASE WHEN ub.status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_count FROM books b LEFT JOIN user_books ub ON b.id = ub.book_id GROUP BY b.id");
       ResultSet rs = ps.executeQuery();
       while (rs.next()) {
-        Book book = new Book();
+        BookDetails book = new BookDetails();
         book.setId(rs.getInt("id"));
         book.setTitle(rs.getString("title"));
         book.setAuthor(rs.getString("author"));
@@ -31,8 +34,9 @@ public class BookDAOImpl implements BookDAO {
         book.setGenre(rs.getString("genre"));
         book.setRating(rs.getDouble("rating"));
         book.setPageCount(rs.getInt("page_count"));
-        book.setGenre(rs.getString("genre"));
         book.setCoverUrl(rs.getString("cover_url"));
+        book.setInProgressCount(rs.getInt("in_progress_count"));
+        book.setCompletedCount(rs.getInt("completed_count"));
         books.add(book);
       }
     } catch (IOException | ClassNotFoundException | SQLException e) {

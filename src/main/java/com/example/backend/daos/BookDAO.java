@@ -2,13 +2,14 @@ package com.example.backend.daos;
 
 import java.util.List;
 
+import com.example.backend.dtos.BookDetails;
 import com.example.backend.models.Book;
 
 public interface BookDAO {
 
   public Book findById(int id);
 
-  public List<Book> findAll();
+  public List<BookDetails> findAll();
 
   public boolean save(String title, String author, int yearPublished, String genre);
 
