@@ -64,7 +64,7 @@ public class AuthController {
       String password = ctx.formParam("password");
 
       if (email == null || password == null) {
-        ctx.status(400).result("Missing required fields");
+        ctx.status(400).json(Map.of("error", "Missing required fields"));
         return;
       }
 
@@ -91,16 +91,18 @@ public class AuthController {
 
   public void loginWithUsernamePassword(Context ctx) {
     try {
+      System.out.println(ctx.path());
       String username = ctx.formParam("username");
       String password = ctx.formParam("password");
 
       if (username == null || password == null) {
-        ctx.status(400).result("Missing required fields");
+        ctx.status(400).json(Map.of("error", "Missing required fields"));
         return;
       }
 
       User user = authDAO.loginWithUsernamePassword(username, password);
       if (user != null) {
+        System.out.println("generating tokens");
         String accessToken = JwtUtils.generateAccessToken(username);
         ctx.header("Authorization", "Bearer " + accessToken);
         ctx.header("Access-Control-Allow-Credentials", "true");

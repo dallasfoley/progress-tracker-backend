@@ -80,11 +80,11 @@ public class UserController {
         return;
       }
 
-      boolean isUpdated = userDAO.updateUser(new User(id, username, email, password));
-      if (isUpdated) {
-        ctx.status(200).result("User updated successfully");
+      User updatedUser = userDAO.updateUser(new User(id, username, email, password));
+      if (updatedUser != null) {
+        ctx.json(updatedUser).status(200);
       } else {
-        ctx.status(500).result("Failed to update user");
+        ctx.json(Map.of("error", "Bad user info")).status(404);
       }
     } catch (Exception e) {
       ctx.status(500).result("Internal Server Error");

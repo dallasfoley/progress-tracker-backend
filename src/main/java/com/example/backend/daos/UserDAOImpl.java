@@ -77,7 +77,7 @@ public class UserDAOImpl implements UserDAO {
   }
 
   @Override
-  public boolean updateUser(User user) {
+  public User updateUser(User user) {
     try {
       conn = ConnectionManager.getConnection();
       PreparedStatement ps = conn.prepareStatement(
@@ -87,11 +87,13 @@ public class UserDAOImpl implements UserDAO {
       ps.setString(3, user.getPassword());
       ps.setInt(5, user.getId());
       int rowsAffected = ps.executeUpdate();
-      return rowsAffected > 0;
+      if (rowsAffected > 0) {
+        return user;
+      }
     } catch (Exception e) {
       e.printStackTrace();
-      return false;
     }
+    return null;
   }
 
   @Override

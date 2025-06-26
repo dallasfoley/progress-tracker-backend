@@ -49,12 +49,14 @@ public class AuthDAOImpl implements AuthDAO {
     try {
       conn = ConnectionManager.getConnection();
       PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE email = ? AND password = ?");
+      ps.setString(1, email);
+      ps.setString(2, password);
       ResultSet rs = ps.executeQuery();
       if (rs.next()) {
-        int id = rs.getInt(1);
-        String username = rs.getString(2);
-        String userEmail = rs.getString(3);
-        String userPassword = rs.getString(4);
+        String username = rs.getString("username");
+        String userEmail = rs.getString("email");
+        String userPassword = rs.getString("password");
+        int id = rs.getInt("id");
         return new User(id, username, userEmail, userPassword);
       }
     } catch (Exception e) {
