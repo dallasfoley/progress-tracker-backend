@@ -9,6 +9,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import com.example.backend.connection.ConnectionManager;
 import com.example.backend.exceptions.EmailAlreadyExistsException;
 import com.example.backend.exceptions.UsernameAlreadyExistsException;
+import com.example.backend.models.Role;
 import com.example.backend.models.User;
 
 public class AuthDAOImpl implements AuthDAO {
@@ -77,7 +78,8 @@ public class AuthDAOImpl implements AuthDAO {
         String usersname = rs.getString(2);
         String userEmail = rs.getString(3);
         String userPassword = rs.getString(4);
-        return new User(id, usersname, userEmail, userPassword);
+        Role role = Role.fromString(rs.getString(5));
+        return new User(id, usersname, userEmail, userPassword, role);
       }
     } catch (Exception e) {
       e.printStackTrace();

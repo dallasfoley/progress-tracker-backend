@@ -70,17 +70,14 @@ public class UserController {
 
   public void updateUser(Context ctx) {
     try {
-      int id = Integer.parseInt(ctx.pathParam("id"));
-      String username = ctx.formParam("username");
-      String email = ctx.formParam("email");
-      String password = ctx.formParam("password");
+      User user = ctx.bodyAsClass(User.class);
 
-      if (username == null || email == null || password == null) {
-        ctx.status(400).result("Missing required fields");
+      if (user.getUsername() == null || user.getEmail() == null || user.getPassword() == null) {
+        ctx.status(400).json(Map.of("error", "Missing required fields"));
         return;
       }
 
-      User updatedUser = userDAO.updateUser(new User(id, username, email, password));
+      User updatedUser = userDAO.updateUser(user);
       if (updatedUser != null) {
         ctx.json(updatedUser).status(200);
       } else {
@@ -97,14 +94,15 @@ public class UserController {
       System.out.println(ctx.path());
       int id = Integer.parseInt(ctx.pathParam("id"));
       boolean isDeleted = userDAO.deleteUser(id);
-      if (isDeleted != false) {
+      if (isDeleted == false) {
         ctx.status(400).json(Map.of("error", "User not found"));
+        System.out.println("User not found");
       } else {
         System.out.println("User deleted successfully");
         ctx.status(200).json(Map.of("message", "User deleted successfully"));
       }
     } catch (Exception e) {
-      ctx.status(500).result("Internal Server Error");
+      ctx.status(500).json(Map.of("error", e.getMessage()));
       e.printStackTrace();
     }
   }

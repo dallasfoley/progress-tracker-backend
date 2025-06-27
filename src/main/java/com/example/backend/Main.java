@@ -51,7 +51,7 @@ public class Main {
         app.get("/api/users/<id>", userController::findUserById);
         app.get("/api/users/username/<username>", userController::findUserByUsername);
         app.post("/api/users", userController::createUser);
-        app.put("/api/users/<id>", userController::updateUser);
+        app.put("/api/users", userController::updateUser);
         app.delete("/api/users/<id>", userController::deleteUser);
 
         app.get("/api/books", bookController::findAll);
@@ -60,7 +60,7 @@ public class Main {
         app.get("/api/books/author", bookController::findBooksByAuthor);
         app.post("/api/books", bookController::save);
         app.delete("/api/books/<id>", bookController::delete);
-        app.put("/api/books/<id>", bookController::update);
+        app.put("/api/books", bookController::update);
 
         app.get("/api/user_books/<userId>/<bookId>", userBookController::findById);
         app.get("/api/user_books/<userId>", userBookController::findByUserId);

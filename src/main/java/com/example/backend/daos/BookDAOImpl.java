@@ -62,7 +62,7 @@ public class BookDAOImpl implements BookDAO {
         book.setRating(rs.getDouble("rating"));
         book.setPageCount(rs.getInt("page_count"));
         book.setGenre(rs.getString("genre"));
-        book.setCoverUrl(rs.getString("cover_image"));
+        book.setCoverUrl(rs.getString("cover_url"));
         return book;
       }
     } catch (Exception e) {
@@ -126,15 +126,20 @@ public class BookDAOImpl implements BookDAO {
   }
 
   @Override
-  public boolean save(String title, String author, int yearPublished, String genre) {
+  public boolean save(String title, String author, int yearPublished, String genre, double rating, int pageCount,
+      String coverUrl, String description) {
     try {
       conn = ConnectionManager.getConnection();
       PreparedStatement ps = conn.prepareStatement(
-          "INSERT INTO books (title, author, year_published, genre) VALUES (?, ?, ?, ?)");
+          "INSERT INTO books (title, author, year_published, genre, rating, page_count, cover_url, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
       ps.setString(1, title);
       ps.setString(2, author);
       ps.setInt(3, yearPublished);
       ps.setString(4, genre);
+      ps.setDouble(5, rating);
+      ps.setInt(6, pageCount);
+      ps.setString(7, coverUrl);
+      ps.setString(8, description);
       int rowsAffected = ps.executeUpdate();
       return rowsAffected > 0;
     } catch (IOException | ClassNotFoundException | SQLException e) {
@@ -154,7 +159,36 @@ public class BookDAOImpl implements BookDAO {
     } catch (IOException | ClassNotFoundException | SQLException e) {
       e.printStackTrace();
       return false;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
     }
+  }
+
+  @Override
+  public boolean update(Book book) {
+    try {
+      conn = ConnectionManager.getConnection();
+      PreparedStatement ps = conn.prepareStatement(
+          "UPDATE books SET title = ?, author = ?, year_published = ?, genre = ?, rating = ?, page_count = ?, cover_url = ?, description = ? WHERE id = ?");
+      ps.setString(1, book.getTitle());
+      ps.setString(2, book.getAuthor());
+      ps.setInt(3, book.getYearPublished());
+      ps.setString(4, book.getGenre());
+      ps.setDouble(5, book.getRating());
+      ps.setInt(6, book.getPageCount());
+      ps.setString(7, book.getCoverUrl());
+      ps.setString(8, book.getDescription());
+      ps.setInt(9, book.getId());
+      int rowsAffected = ps.executeUpdate();
+      return rowsAffected > 0;
+    } catch (IOException | ClassNotFoundException | SQLException e) {
+      e.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return false;
   }
 
 }

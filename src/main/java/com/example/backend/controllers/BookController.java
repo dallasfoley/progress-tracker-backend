@@ -79,11 +79,9 @@ public class BookController {
 
   public void save(Context ctx) {
     try {
-      String title = ctx.formParam("title");
-      String author = ctx.formParam("author");
-      Integer yearPublished = Integer.parseInt(ctx.formParam("yearPublished"));
-      String genre = ctx.formParam("genre");
-      boolean success = bookDAO.save(title, author, yearPublished, genre);
+      Book book = ctx.bodyAsClass(Book.class);
+      boolean success = bookDAO.save(book.getTitle(), book.getAuthor(), book.getYearPublished(), book.getGenre(),
+          book.getRating(), book.getPageCount(), book.getCoverUrl(), book.getDescription());
       if (success) {
         ctx.status(200).json(Map.of("message", "Book saved successfully"));
       } else {
@@ -111,7 +109,22 @@ public class BookController {
   }
 
   public void update(Context ctx) {
-
+    System.out.println(ctx.path());
+    try {
+      Book book = ctx.bodyAsClass(Book.class);
+      boolean success = bookDAO.update(book);
+      if (success) {
+        System.out.println("Book updated successfully");
+        ctx.status(200).json(Map.of("message", "Book updated successfully"));
+      } else {
+        System.out.println("No books found");
+        ctx.status(500).json(Map.of("error", "No books found"));
+      }
+    } catch (Exception e) {
+      System.out.println("Internal Server Error");
+      ctx.status(500).json(Map.of("error", "Internal Server Error"));
+      e.printStackTrace();
+    }
   }
 
 }
