@@ -9,12 +9,26 @@ import com.example.backend.daos.BookDAOImpl;
 import com.example.backend.daos.UserBookDAOImpl;
 import com.example.backend.daos.UserDAOImpl;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import io.javalin.Javalin;
 
 public class Main {
     public static void main(String[] args) {
 
-        int PORT_NUMBER = 7000;
+        final boolean isDev = System.getenv("READING_PROGRESS_TRACKER_DB_URL") == null;
+        final Dotenv dotenv;
+        if (isDev) {
+            dotenv = Dotenv.configure().filename(".env.local").ignoreIfMissing().load();
+            dotenv.get("READING_PROGRESS_TRACKER_DB_URL");
+        } else {
+            dotenv = null;
+        }
+
+        int PORT_NUMBER = !isDev
+                ? Integer.parseInt(System.getenv("READING_PROGRESS_TRACKER_PORT"))
+                : Integer.parseInt(dotenv.get("READING_PROGRESS_TRACKER_PORT"));
+
+        System.out.println("PORT_NUMBER: " + PORT_NUMBER);
 
         UserDAOImpl userDAO = new UserDAOImpl();
         BookDAOImpl bookDAO = new BookDAOImpl();
@@ -29,7 +43,12 @@ public class Main {
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(it -> {
-                    it.allowHost("localhost:3000");
+                    if (isDev == true) {
+                        it.allowHost(dotenv.get("READING_PROGRESS_TRACKER_FRONTEND_URL"));
+                    } else {
+                        it.allowHost(System.getenv("READING_PROGRESS_TRACKER_FRONTEND_URL"));
+                    }
+
                     it.allowCredentials = true;
                     it.exposeHeader("Content-Type");
                     it.exposeHeader("Set-Cookie");
@@ -44,8 +63,13 @@ public class Main {
 
         app.before("/api/*", ctx -> {
             ctx.contentType("application/json");
-            ctx.header("Access-Control-Allow-Origin", "http://localhost:3000");
+            if (isDev == true) {
+                ctx.header("Access-Control-Allow-Origin", dotenv.get("READING_PROGRESS_TRACKER_FRONTEND_URL"));
+            } else {
+                ctx.header("Access-Control-Allow-Origin", System.getenv("READING_PROGRESS_TRACKER_FRONTEND_URL"));
+            }
             ctx.header("Access-Control-Allow-Credentials", "true");
+            ctx.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         });
 
         app.get("/api/users/<id>", userController::findUserById);
@@ -71,10 +95,10 @@ public class Main {
         app.patch("/api/user_books/rating/<userId>/<bookId>", userBookController::updateRating);
 
         app.post("/api/auth/register", authController::register);
-        app.post("api/auth/login/username", authController::loginWithUsernamePassword);
-        app.post("api/auth/login/email", authController::loginWithEmailPassword);
-        app.post("api/auth/refresh", authController::refreshAccessToken);
-        app.get("api/auth/logout", authController::logout);
+        app.post("/api/auth/login/username", authController::loginWithUsernamePassword);
+        app.post("/api/auth/login/email", authController::loginWithEmailPassword);
+        app.post("/api/auth/refresh", authController::refreshAccessToken);
+        app.get("/api/auth/logout", authController::logout);
 
         app.error(400, ctx -> {
             System.out.println("400 Error triggered at path: " + ctx.path());
