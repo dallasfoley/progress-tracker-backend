@@ -9,23 +9,26 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import com.example.backend.connection.ConnectionManager;
 import com.example.backend.exceptions.EmailAlreadyExistsException;
 import com.example.backend.exceptions.UsernameAlreadyExistsException;
+import com.example.backend.models.Role;
 import com.example.backend.models.User;
 
 public class AuthDAOImpl implements AuthDAO {
 
-  private Connection conn;
-
   public User register(String username, String email, String password) {
-    try {
-      conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn.prepareStatement("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+
+    String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+    try (Connection conn = ConnectionManager.getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
       ps.setString(1, username);
       ps.setString(2, email);
       ps.setString(3, password);
       int rowsAffected = ps.executeUpdate();
       if (rowsAffected > 0) {
-        int id = PreparedStatement.RETURN_GENERATED_KEYS;
-        return new User(id, username, email, password);
+        try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+          int id = generatedKeys.getInt("id");
+          return new User(id, username, email, password);
+        }
+
       }
     } catch (SQLIntegrityConstraintViolationException e) {
       String errorMessage = e.getMessage().toLowerCase();
@@ -46,16 +49,19 @@ public class AuthDAOImpl implements AuthDAO {
   }
 
   public User loginWithEmailPassword(String email, String password) {
-    try {
-      conn = ConnectionManager.getConnection();
-      PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE email = ? AND password = ?");
-      ResultSet rs = ps.executeQuery();
-      if (rs.next()) {
-        int id = rs.getInt(1);
-        String username = rs.getString(2);
-        String userEmail = rs.getString(3);
-        String userPassword = rs.getString(4);
-        return new User(id, username, userEmail, userPassword);
+    String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
+    try (Connection conn = ConnectionManager.getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql);) {
+      ps.setString(1, email);
+      ps.setString(2, password);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          String username = rs.getString("username");
+          String userEmail = rs.getString("email");
+          String userPassword = rs.getString("password");
+          int id = rs.getInt("id");
+          return new User(id, username, userEmail, userPassword);
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -64,19 +70,22 @@ public class AuthDAOImpl implements AuthDAO {
   }
 
   public User loginWithUsernamePassword(String username, String password) {
-    try {
-      conn = ConnectionManager.getConnection();
+    try (Connection conn = ConnectionManager.getConnection();) {
       PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?");
       ps.setString(1, username);
       ps.setString(2, password);
-      ResultSet rs = ps.executeQuery();
-      if (rs.next()) {
-        int id = rs.getInt(1);
-        String usersname = rs.getString(2);
-        String userEmail = rs.getString(3);
-        String userPassword = rs.getString(4);
-        return new User(id, usersname, userEmail, userPassword);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          int id = rs.getInt(1);
+          String usersname = rs.getString(2);
+          String userEmail = rs.getString(3);
+          String userPassword = rs.getString(4);
+          Role role = Role.fromString(rs.getString(5));
+          return new User(id, usersname, userEmail, userPassword, role);
+        }
       }
+      ;
+
     } catch (Exception e) {
       e.printStackTrace();
     }

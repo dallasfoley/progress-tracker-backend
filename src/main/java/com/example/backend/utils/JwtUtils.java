@@ -42,7 +42,8 @@ public class JwtUtils {
     }
   }
 
-  public static DecodedJWT validateAccessToken(String token) {
+  public static DecodedJWT validateAccessToken(String token) throws JWTVerificationException {
+
     try {
       Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
       JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
@@ -53,7 +54,7 @@ public class JwtUtils {
     }
   }
 
-  public static DecodedJWT validateRefreshToken(String token) {
+  public static DecodedJWT validateRefreshToken(String token) throws JWTVerificationException {
     try {
       Algorithm algorithm = Algorithm.HMAC256(REFRESH_SECRET_KEY);
       JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
