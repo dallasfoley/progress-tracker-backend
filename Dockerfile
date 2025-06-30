@@ -1,19 +1,21 @@
 # Build stage
-FROM maven:4.0.0-jdk-17 AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy pom.xml first to leverage Docker cache
 COPY pom.xml .
+
+# Download all dependencies
 RUN mvn dependency:go-offline -B
 
 # Copy source code
 COPY src ./src
 
-# Build the application
+# Build the application (creates fat JAR)
 RUN mvn clean package -DskipTests -B
 
 # Runtime stage
-FROM openjdk:17-jre-alpine
+FROM eclipse-temurin:17-jre-alpine
 
 # Add non-root user for security
 RUN addgroup -g 1001 -S appgroup && \
@@ -21,8 +23,9 @@ RUN addgroup -g 1001 -S appgroup && \
 
 WORKDIR /app
 
-# Copy the jar file
-COPY --from=build /app/target/*.jar app.jar
+# Copy the shaded JAR file (the one with dependencies)
+# Look for the larger JAR file or use a more specific pattern
+COPY --from=build /app/target/demo-1.0-SNAPSHOT.jar app.jar
 
 # Change ownership to non-root user
 RUN chown appuser:appgroup app.jar
