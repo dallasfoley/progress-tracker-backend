@@ -54,6 +54,7 @@ public class UserBookController {
       if (books.isEmpty()) {
         ctx.json(ApiResponseDTO.success("No books found for this user", books)).status(200);
       } else {
+        System.out.println(ctx.path());
         ctx.json(ApiResponseDTO.success("Books retrieved successfully", books)).status(200);
       }
     } catch (NumberFormatException e) {

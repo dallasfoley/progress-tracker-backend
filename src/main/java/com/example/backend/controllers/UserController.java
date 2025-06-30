@@ -15,59 +15,6 @@ public class UserController {
     this.userDAO = userDAO;
   }
 
-  public void findUserById(Context ctx) {
-    try {
-      int id = Integer.parseInt(ctx.pathParam("id"));
-      var user = userDAO.findUserById(id);
-      if (user == null) {
-        ctx.status(404).result("User not found");
-      } else {
-        ctx.json(user).status(200);
-      }
-    } catch (Exception e) {
-      ctx.status(500).result("Internal Server Error");
-      e.printStackTrace();
-    }
-  }
-
-  public void findUserByUsername(Context ctx) {
-    try {
-      String username = ctx.pathParam("username");
-      var user = userDAO.findUserByUsername(username);
-      if (user == null) {
-        ctx.status(404).result("User not found");
-      } else {
-        ctx.json(user).status(200);
-      }
-    } catch (Exception e) {
-      ctx.status(500).result("Internal Server Error");
-      e.printStackTrace();
-    }
-  }
-
-  public void createUser(Context ctx) {
-    try {
-      String username = ctx.formParam("username");
-      String email = ctx.formParam("email");
-      String password = ctx.formParam("password");
-
-      if (username == null || email == null || password == null) {
-        ctx.status(400).result("Missing required fields");
-        return;
-      }
-
-      boolean isCreated = userDAO.save(username, email, password);
-      if (isCreated) {
-        ctx.status(201).result("User created successfully");
-      } else {
-        ctx.status(500).result("Failed to create user");
-      }
-    } catch (Exception e) {
-      ctx.status(500).result("Internal Server Error");
-      e.printStackTrace();
-    }
-  }
-
   public void updateUser(Context ctx) {
     try {
       User user = ctx.bodyAsClass(User.class);
