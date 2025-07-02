@@ -32,13 +32,13 @@ public class AuthController {
     String refreshToken = JwtUtils.generateRefreshToken(username);
     Cookie accessCookie = new Cookie("accessToken", accessToken);
     accessCookie.setHttpOnly(true);
-    // accessCookie.setSecure(true);
+    accessCookie.setSecure(true);
     accessCookie.setSameSite(SameSite.LAX);
-    accessCookie.setMaxAge(60 * 60); // 1 hour
+    accessCookie.setMaxAge(60 * 60 * 24); // 1 day
     ctx.cookie(accessCookie);
     Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
     refreshCookie.setHttpOnly(true);
-    // refreshCookie.setSecure(true);
+    refreshCookie.setSecure(true);
     refreshCookie.setSameSite(SameSite.LAX);
     refreshCookie.setMaxAge(60 * 60 * 24 * 30); // 30 days
     ctx.cookie(refreshCookie);
@@ -99,7 +99,6 @@ public class AuthController {
 
       User user = authDAO.loginWithEmailPassword(email, password);
       if (user != null) {
-        // Set authentication cookies
         Cookie[] cookies = createAuthCookies(ctx, email);
 
         ctx.status(200).json(Map.of(
@@ -122,10 +121,7 @@ public class AuthController {
 
   public void loginWithUsernamePassword(Context ctx) {
     System.out.println(ctx.path());
-
-    // Set CORS headers first
     setCorsHeaders(ctx);
-
     try {
       String username = ctx.formParam("username");
       String password = ctx.formParam("password");
@@ -138,13 +134,11 @@ public class AuthController {
       User user = authDAO.loginWithUsernamePassword(username, password);
       if (user != null) {
         System.out.println("generating tokens");
-
-        // Set authentication cookies
         Cookie[] cookies = createAuthCookies(ctx, username);
 
         ctx.status(200).json(Map.of(
             "success", true,
-            "message", "User logged in successfully", // Fixed message
+            "message", "User logged in successfully",
             "data", user,
             "accessToken", cookies[0].getValue(),
             "refreshToken", cookies[1].getValue()));
@@ -161,9 +155,7 @@ public class AuthController {
   }
 
   public void refreshAccessToken(Context ctx) {
-    // Set CORS headers first
     setCorsHeaders(ctx);
-
     @SuppressWarnings("unchecked")
     String refreshToken = ((Map<String, String>) ctx.bodyAsClass(Map.class)).get("refreshToken");
 
@@ -171,7 +163,6 @@ public class AuthController {
       ctx.status(401).json(Map.of("error", "Missing refresh token"));
       return;
     }
-
     var decodedJWT = JwtUtils.validateRefreshToken(refreshToken);
     if (decodedJWT == null) {
       ctx.status(403).json(Map.of("error", "Invalid refresh token"));
@@ -182,32 +173,12 @@ public class AuthController {
     String accessToken = JwtUtils.generateAccessToken(username);
     Cookie accessCookie = new Cookie("accessToken", accessToken);
     accessCookie.setHttpOnly(true);
-    // accessCookie.setSecure(true); // Enable in production
+    accessCookie.setSecure(true); // Enable in production
     accessCookie.setSameSite(SameSite.LAX);
     accessCookie.setMaxAge(60 * 60);
     ctx.cookie(accessCookie);
 
     ctx.status(200).json(Map.of(
         "accessToken", accessCookie.getValue()));
-  }
-
-  public void logout(Context ctx) {
-    // Set CORS headers first
-    setCorsHeaders(ctx);
-
-    // Clear cookies by setting them with empty values and negative maxAge
-    Cookie accessCookie = new Cookie("accessToken", "");
-    accessCookie.setHttpOnly(true);
-    accessCookie.setSameSite(SameSite.LAX);
-    accessCookie.setMaxAge(0);
-    ctx.cookie(accessCookie);
-
-    Cookie refreshCookie = new Cookie("refreshToken", "");
-    refreshCookie.setHttpOnly(true);
-    refreshCookie.setSameSite(SameSite.LAX);
-    refreshCookie.setMaxAge(0);
-    ctx.cookie(refreshCookie);
-
-    ctx.status(200).json(Map.of("message", "Logout successful"));
   }
 }

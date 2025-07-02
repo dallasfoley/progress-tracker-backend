@@ -9,8 +9,11 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 public class JwtUtils {
 
-  private static final String SECRET_KEY = "access_secret";
-  private static final String REFRESH_SECRET_KEY = "refresh_secret";
+  private static final String SECRET_KEY = System.getenv("SECRET_KEY") != null ? System.getenv("SECRET_KEY")
+      : "secret_key";
+  private static final String REFRESH_SECRET_KEY = System.getenv("REFRESH_SECRET_KEY") != null
+      ? System.getenv("REFRESH_SECRET_KEY")
+      : "refresh_secret";
   private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 15; // 15 minutes
   private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 days
 
