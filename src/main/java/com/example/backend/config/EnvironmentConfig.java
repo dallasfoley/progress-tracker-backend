@@ -1,31 +1,24 @@
 package com.example.backend.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
-
 public class EnvironmentConfig {
   private final boolean isDev;
-  private final Dotenv dotenv;
   private final int port;
   private final String frontendUrl;
 
   public EnvironmentConfig() {
     this.isDev = System.getenv("READING_PROGRESS_TRACKER_DB_URL") == null;
 
-    if (isDev) {
-      this.dotenv = Dotenv.configure().filename(".env.local").ignoreIfMissing().load();
-    } else {
-      this.dotenv = null;
-    }
-
     this.port = isDev
-        ? Integer.parseInt(dotenv.get("READING_PROGRESS_TRACKER_PORT"))
+        ? 8081
         : Integer.parseInt(System.getenv("READING_PROGRESS_TRACKER_PORT"));
 
     this.frontendUrl = isDev
-        ? dotenv.get("READING_PROGRESS_TRACKER_FRONTEND_URL")
+        ? "http://localhost:8081"
         : System.getenv("READING_PROGRESS_TRACKER_FRONTEND_URL");
 
-    System.out.println("PORT_NUMBER: " + port);
+    if (frontendUrl == null || frontendUrl.isEmpty()) {
+      System.out.println("FRONTEND_URL: " + frontendUrl);
+    }
   }
 
   public boolean isDev() {
