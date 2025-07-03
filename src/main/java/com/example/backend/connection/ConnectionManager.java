@@ -27,6 +27,10 @@ public class ConnectionManager {
     String db = System.getenv("MYSQL_DB");
     String username = System.getenv("MYSQL_USERNAME");
     String password = System.getenv("MYSQL_PASSWORD");
+    // String host = "localhost";
+    // String port = "3306";
+    // String db = "books";
+    // String username = "root";
     String jdbcUrl = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&allowPublicKeyRetrieval=true";
     System.out.println("jdbcUrl: " + jdbcUrl);
     System.out.println("Connecting to DB at: " + jdbcUrl);

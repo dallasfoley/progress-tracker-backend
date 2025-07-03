@@ -5,10 +5,14 @@ import io.javalin.config.JavalinConfig;
 
 public class CorsConfig {
 
-  public static void configure(JavalinConfig config, EnvironmentConfig envConfig) {
+  private CorsConfig() {
+
+  }
+
+  public static void configure(JavalinConfig config) {
     config.bundledPlugins.enableCors(cors -> {
       cors.addRule(it -> {
-        it.allowHost(envConfig.getFrontendUrl());
+        it.allowHost(EnvironmentConfig.FRONTEND_URL);
         it.allowCredentials = true;
         it.exposeHeader("Content-Type");
         it.exposeHeader("Set-Cookie");
@@ -21,10 +25,10 @@ public class CorsConfig {
     });
   }
 
-  public static void configureGlobalHeaders(Javalin app, EnvironmentConfig envConfig) {
+  public static void configureGlobalHeaders(Javalin app) {
     app.before("/api/*", ctx -> {
       ctx.contentType("application/json");
-      ctx.header("Access-Control-Allow-Origin", envConfig.getFrontendUrl());
+      ctx.header("Access-Control-Allow-Origin", EnvironmentConfig.FRONTEND_URL);
       ctx.header("Access-Control-Allow-Credentials", "true");
       ctx.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
       ctx.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");

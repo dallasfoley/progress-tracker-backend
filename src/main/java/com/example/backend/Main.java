@@ -10,15 +10,12 @@ import io.javalin.Javalin;
 
 public class Main {
     public static void main(String[] args) {
-
-        EnvironmentConfig envConfig = new EnvironmentConfig();
-
         var app = Javalin.create(config -> {
-            CorsConfig.configure(config, envConfig);
+            CorsConfig.configure(config);
         }).get("/", ctx -> ctx.result("Hello World"))
-                .start(envConfig.getPort());
+                .start(EnvironmentConfig.PORT);
 
-        CorsConfig.configureGlobalHeaders(app, envConfig);
+        CorsConfig.configureGlobalHeaders(app);
 
         AuthRoutes.register(app);
         UserRoutes.register(app);

@@ -1,35 +1,30 @@
 package com.example.backend.config;
 
 public class EnvironmentConfig {
-  private final boolean isDev;
-  private final int port;
-  private final String frontendUrl;
+  public static final boolean IS_DEV;
+  public static final int PORT;
+  public static final String FRONTEND_URL;
 
-  public EnvironmentConfig() {
-    this.isDev = System.getenv("READING_PROGRESS_TRACKER_DB_URL") == null;
+  private EnvironmentConfig() {
 
-    this.port = isDev
+  }
+
+  static {
+    IS_DEV = System.getenv("READING_PROGRESS_TRACKER_DB_URL") == null;
+
+    PORT = IS_DEV
         ? 8081
         : Integer.parseInt(System.getenv("READING_PROGRESS_TRACKER_PORT"));
 
-    this.frontendUrl = isDev
+    String url = IS_DEV
         ? "http://localhost:8081"
         : System.getenv("READING_PROGRESS_TRACKER_FRONTEND_URL");
 
-    if (frontendUrl == null || frontendUrl.isEmpty()) {
-      System.out.println("FRONTEND_URL: " + frontendUrl);
+    if (url == null || url.isEmpty()) {
+      System.out.println("FRONTEND_URL: " + url);
     }
+
+    FRONTEND_URL = url;
   }
 
-  public boolean isDev() {
-    return isDev;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public String getFrontendUrl() {
-    return frontendUrl;
-  }
 }

@@ -19,35 +19,38 @@ public class AuthController {
     this.authDAO = authDAO;
   }
 
-  private void setCorsHeaders(Context ctx) {
-    String frontendUrl = new EnvironmentConfig().getFrontendUrl();
+  private Cookie[] setHeadersAndAuthCookies(Context ctx, String username) {
+    String frontendUrl = EnvironmentConfig.FRONTEND_URL;
     ctx.header("Access-Control-Allow-Origin", frontendUrl);
     ctx.header("Access-Control-Allow-Credentials", "true");
     ctx.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
     ctx.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
-  }
-
-  private Cookie[] createAuthCookies(Context ctx, String username) {
     String accessToken = JwtUtils.generateAccessToken(username);
     String refreshToken = JwtUtils.generateRefreshToken(username);
     Cookie accessCookie = new Cookie("accessToken", accessToken);
     accessCookie.setHttpOnly(true);
-    accessCookie.setSecure(true);
-    accessCookie.setSameSite(SameSite.LAX);
     accessCookie.setMaxAge(60 * 60 * 24); // 1 day
     ctx.cookie(accessCookie);
     Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
     refreshCookie.setHttpOnly(true);
-    refreshCookie.setSecure(true);
-    refreshCookie.setSameSite(SameSite.LAX);
     refreshCookie.setMaxAge(60 * 60 * 24 * 30); // 30 days
+    if (EnvironmentConfig.IS_DEV) {
+      accessCookie.setSecure(false);
+      accessCookie.setSameSite(SameSite.LAX);
+      refreshCookie.setSecure(false);
+      refreshCookie.setSameSite(SameSite.LAX);
+    } else {
+      accessCookie.setSecure(true);
+      accessCookie.setSameSite(SameSite.NONE);
+      refreshCookie.setSameSite(SameSite.NONE);
+      refreshCookie.setSecure(true);
+    }
     ctx.cookie(refreshCookie);
     return new Cookie[] { accessCookie, refreshCookie };
   }
 
   public void register(Context ctx) {
     System.out.println(ctx.path());
-    setCorsHeaders(ctx);
     try {
       String username = ctx.formParam("username");
       String email = ctx.formParam("email");
@@ -56,7 +59,7 @@ public class AuthController {
       User user = authDAO.register(username, email, password);
       if (user != null) {
         System.out.println("generating tokens");
-        Cookie[] cookies = createAuthCookies(ctx, username);
+        Cookie[] cookies = setHeadersAndAuthCookies(ctx, username);
 
         ctx.status(201).json(Map.of(
             "success", true,
@@ -85,9 +88,6 @@ public class AuthController {
   }
 
   public void loginWithEmailPassword(Context ctx) {
-    // Set CORS headers first
-    setCorsHeaders(ctx);
-
     try {
       String email = ctx.formParam("email");
       String password = ctx.formParam("password");
@@ -99,7 +99,7 @@ public class AuthController {
 
       User user = authDAO.loginWithEmailPassword(email, password);
       if (user != null) {
-        Cookie[] cookies = createAuthCookies(ctx, email);
+        Cookie[] cookies = setHeadersAndAuthCookies(ctx, email);
 
         ctx.status(200).json(Map.of(
             "success", true,
@@ -121,7 +121,6 @@ public class AuthController {
 
   public void loginWithUsernamePassword(Context ctx) {
     System.out.println(ctx.path());
-    setCorsHeaders(ctx);
     try {
       String username = ctx.formParam("username");
       String password = ctx.formParam("password");
@@ -134,7 +133,7 @@ public class AuthController {
       User user = authDAO.loginWithUsernamePassword(username, password);
       if (user != null) {
         System.out.println("generating tokens");
-        Cookie[] cookies = createAuthCookies(ctx, username);
+        Cookie[] cookies = setHeadersAndAuthCookies(ctx, username);
 
         ctx.status(200).json(Map.of(
             "success", true,
@@ -155,7 +154,11 @@ public class AuthController {
   }
 
   public void refreshAccessToken(Context ctx) {
-    setCorsHeaders(ctx);
+    String frontendUrl = EnvironmentConfig.FRONTEND_URL;
+    ctx.header("Access-Control-Allow-Origin", frontendUrl);
+    ctx.header("Access-Control-Allow-Credentials", "true");
+    ctx.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+    ctx.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
     @SuppressWarnings("unchecked")
     String refreshToken = ((Map<String, String>) ctx.bodyAsClass(Map.class)).get("refreshToken");
 
