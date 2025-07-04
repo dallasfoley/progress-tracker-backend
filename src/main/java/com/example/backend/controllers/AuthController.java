@@ -4,6 +4,8 @@ import java.util.Map;
 
 import com.example.backend.config.EnvironmentConfig;
 import com.example.backend.daos.AuthDAOImpl;
+import com.example.backend.exceptions.EmailAlreadyExistsException;
+import com.example.backend.exceptions.UsernameAlreadyExistsException;
 import com.example.backend.models.User;
 import com.example.backend.utils.JwtUtils;
 
@@ -68,6 +70,10 @@ public class AuthController {
             "accessToken", cookies[0].getValue(),
             "refreshToken", cookies[1].getValue()));
       }
+    } catch (UsernameAlreadyExistsException e) {
+      ctx.status(409).json(Map.of("error", e.getMessage())); // Use the message from the exception
+    } catch (EmailAlreadyExistsException e) {
+      ctx.status(409).json(Map.of("error", e.getMessage()));
     } catch (RuntimeException e) {
       String errorMessage = e.getMessage();
       e.printStackTrace();

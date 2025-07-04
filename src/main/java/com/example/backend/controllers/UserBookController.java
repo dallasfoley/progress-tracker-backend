@@ -7,6 +7,7 @@ import com.example.backend.dtos.ApiResponseDTO;
 import com.example.backend.dtos.CurrentPageDTO;
 import com.example.backend.dtos.UpdateStatusDTO;
 import com.example.backend.dtos.UserBookDetails;
+import com.example.backend.models.RatingDTO;
 import com.example.backend.models.ReadingStatus;
 import com.example.backend.models.UserBook;
 

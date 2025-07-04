@@ -1,6 +1,4 @@
-package com.example.backend.controllers;
-
-import com.example.backend.models.User;
+package com.example.backend.models;
 
 public class AuthResponse {
   private User user;

@@ -14,7 +14,8 @@ import com.example.backend.models.User;
 
 public class AuthDAOImpl implements AuthDAO {
 
-  public User register(String username, String email, String password) {
+  public User register(String username, String email, String password)
+      throws UsernameAlreadyExistsException, EmailAlreadyExistsException {
 
     String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
     try (Connection conn = ConnectionManager.getConnection();
@@ -25,8 +26,10 @@ public class AuthDAOImpl implements AuthDAO {
       int rowsAffected = ps.executeUpdate();
       if (rowsAffected > 0) {
         try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-          int id = generatedKeys.getInt(1);
-          return new User(id, username, email, password);
+          if (generatedKeys.next()) {
+            int id = generatedKeys.getInt(1); // ✅ Now safe to access
+            return new User(id, username, email, password);
+          }
         }
 
       }
