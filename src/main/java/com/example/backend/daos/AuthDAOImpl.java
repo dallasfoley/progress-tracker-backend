@@ -27,7 +27,7 @@ public class AuthDAOImpl implements AuthDAO {
       if (rowsAffected > 0) {
         try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
           if (generatedKeys.next()) {
-            int id = generatedKeys.getInt(1); // ✅ Now safe to access
+            int id = generatedKeys.getInt(1);
             return new User(id, username, email, password);
           }
         }
