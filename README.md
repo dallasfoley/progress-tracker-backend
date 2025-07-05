@@ -90,54 +90,7 @@ Java JWT is a Java library that allows us to create and validate JWT tokens for 
 
 ## Overall Structure of the Entire Application
 
-```mermaid
-graph TD
-    subgraph Client/Browser
-        A[User's Browser] --> B(Next.js Frontend - Client Components)
-    end
-
-    subgraph Next.js 15 App (EC2 Instance or Vercel/Similar)
-        B --> C{Next.js Backend - Server Components/Route Handlers}
-        C -- HTTP/S Requests --> D[Javalin Server]
-    end
-
-    subgraph Javalin Server (Separate EC2 Instance or Container)
-        D -- JDBC Connection --> E[MySQL Database]
-    end
-
-    subgraph MySQL Database (AWS RDS)
-        E
-    end
-
-    style A fill:#DCE5EE,stroke:#333,stroke-width:2px,color:#333
-    style B fill:#E6F3F7,stroke:#333,stroke-width:2px,color:#333
-    style C fill:#E6F3F7,stroke:#333,stroke-width:2px,color:#333
-    style D fill:#FFF3E0,stroke:#333,stroke-width:2px,color:#333
-    style E fill:#E0F7FA,stroke:#333,stroke-width:2px,color:#333
-
-    linkStyle 0 stroke:#333,stroke-width:1.5px,fill:none,stroke-dasharray: 5 5;
-    linkStyle 1 stroke:#333,stroke-width:1.5px,fill:none,stroke-dasharray: 5 5;
-    linkStyle 2 stroke:#333,stroke-width:1.5px,fill:none;
-    linkStyle 3 stroke:#333,stroke-width:1.5px,fill:none;
-
-    click B "This represents the interactive parts of your Next.js app in the user's browser."
-    click C "This represents the Server Components and Route Handlers that run on the server side in your Next.js app. They handle data fetching and API routes."
-    click D "This is your independent Javalin application, serving as a dedicated backend API."
-    click E "This is your MySQL database, likely managed by AWS RDS."
-
-    %% Optional: Add notes for clarity
-    classDef clientNode fill:#DCE5EE,stroke:#333,stroke-width:2px,color:#333
-    classDef nextjsNode fill:#E6F3F7,stroke:#333,stroke-width:2px,color:#333
-    classDef javalinNode fill:#FFF3E0,stroke:#333,stroke-width:2px,color:#333
-    classDef mysqlNode fill:#E0F7FA,stroke:#333,stroke-width:2px,color:#333
-
-    class A clientNode
-    class B,C nextjsNode
-    class D javalinNode
-    class E mysqlNode
-```
-
-We utilize Next.js as a proxy layer between the client and the Javalin server, which allows us to keep all of calls to the Javalin server on the server side which enhances security by hiding sensitive data from the client, validates and sanitizes all user inputs. It also greatly enhances performance by allowing us to caching our statically rendered routes (technically caching their RSC Payload, we also cache the static components of our dynamically rendered routes through Next.js's experimental Partial Prerendering), caching our requests to the Javalin server with its Data Cache along with a few other caching layers detailed in the frontend README.md.
+We utilize Next.js as a proxy layer between the client and the Javalin server, which allows us to keep all of calls to the Javalin server on the server side which enhances security by hiding sensitive data from the client, validates and sanitizes all user inputs, etc. It also greatly enhances performance by allowing us to caching our statically rendered routes (technically caching their RSC Payload, we also cache the static components of our dynamically rendered routes through Next.js's experimental Partial Prerendering), caching our requests to the Javalin server with its Data Cache along with a few other caching layers detailed in the frontend README.md.
 
 ## Authentication and Authorization
 
