@@ -2,7 +2,7 @@
 
 ## The backend for a Reading Progress Tracker application
 
-For our RESTful API, we have a Java/Javalin app running on an EC2 instance through a docker container connected to an AWD RDS MySQL instance.
+For our RESTful API, we have a Java/Javalin app running on an EC2 instance through a docker container connected to an AWS RDS MySQL instance.
 
 ## Technologies Used
 
@@ -65,7 +65,7 @@ a separate package for creating and managing the JSON our Javalin endpoints resp
 
 ### MySQL and AWS
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally-installed MariaDB instance (offical MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data.
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally-installed MariaDB instance (the official MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data.
 
 ### Docker
 
