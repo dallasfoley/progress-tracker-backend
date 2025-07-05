@@ -65,11 +65,11 @@ a separate package for creating and managing the JSON our Javalin endpoints resp
 
 ### MySQL and AWS
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally-installed MariaDB instance (the official MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data.
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a MariaDB instance (the official MySQL package isn't supported on AWS Linux) locally installed on our EC2 instance to communicate with our AWS RDS MySQL instance to persist and secure our data.
 
 ### Docker
 
-We use Docker to create a containerized environment for our application which allows us to easily deploy it to our AWS EC2 instance, scale and manage the app through Docker commands that allow for reading logs, stopping and running the app. I even have a separate Java backend (with Spring Boot for a Todo App) running on a separate Docker container on the same AWS EC2 instance.
+We use Docker to create a containerized environment for our application which allows us to easily deploy it to our AWS EC2 instance, scale and manage the app through Docker commands that allow for reading logs, stopping and running the app. I even have a separate Java/Spring Boot backend running on a separate Docker container on the same AWS EC2 instance.
 
 ### HikariCP
 
