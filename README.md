@@ -17,7 +17,7 @@ We were tasked with creating a Java application that communicated with a MySQL d
 We use Javalin to instantiate our application and configure our CORS settings:
 
 ```java
-'''
+
  public static void main(String[] args) {
         var app = Javalin.create(config -> {
             CorsConfig.configure(config);
@@ -29,7 +29,7 @@ We use Javalin to instantiate our application and configure our CORS settings:
 We use Javalin to create our API endpoints and run our Middleware:
 
 ```java
-'''
+
 public class AuthRoutes {
 
   public static void register(Javalin app) {
@@ -65,11 +65,18 @@ a separate package for creating and managing the JSON our Javalin endpoints resp
 
 ### MySQL and AWS
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally-installed MariaDB instance (offical MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data.
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally-installed MariaDB instance (offical MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data. To create
+our database, we first needed to copy the .sql file containing our schema to the EC2 instance with
+
+'''
+bash
+scp -i ~/<path-to-private-key>.pem schema.sql ec2-user@<ec2-instance-ip-address>:/home/ec2-user
+'''
+We then need to login to our AWS MySQL instance through the EC2 instance
 
 ### Docker
 
-We use Docker to create a containerized environment for our application which allows us to easily deploy it to our AWS EC2 instance, scale and manage the app through Docker commands that allow for reading logs, stopping and running the app. I even have a separate Java backend (with Spring Boot for a Todo App) running on a separate Docker container on the same AWS EC2 instance.
+We use Docker to create a containerized environment for our application which allows us to easily deploy it to our AWS EC2 instance, scale, secure and manage the app through Docker commands that allow for reading logs, stopping and running the app. We use Docker Secrets to add an extra layer of security to our environment variables which are then passed to the app at build time. I even have a separate Java backend (with Spring Boot for a Todo App) running on a separate Docker container on the same AWS EC2 instance.
 
 ### HikariCP
 
