@@ -8,11 +8,11 @@ For our RESTful API, we have a Java/Javalin app running on an EC2 instance throu
 
 ### Java 17
 
-Java is the primary programming language used for our RESTful API because for one, we were tasked with using Java and two, Java is a great middle ground between high level languages like JavaScript and low level languages like Rust where the language is simple to use (simple syntax, has a garbage collector) but also offers great performance through lower-level features such as memory management, multithreading and being a compiled language. Java also has the benefit of having a large community around it, creating a wide range of tools, libraries, frameworks, discussion and solutions around it.
+Java is the primary programming language used for our RESTful API because for one, we were tasked with using Java and two, Java is a great middle ground between high-level languages like JavaScript and low-level languages like Rust where the language is simple to use (simple syntax, has a garbage collector) but also offers great performance through lower-level features such as memory management, multithreading and being a compiled language. Java also has the benefit of having a large community around it, creating a wide range of tools, libraries, frameworks, discussion and solutions around it.
 
 ### Javalin
 
-We were tasked with creating a Java application that communicated with a MySQL database to store, retrieve and update data about users and a topic of our choice with the constraint that we needed to use raw SQL queries to do so with no ORM or JPA to manage our SQL for us. Given we weren't allowed to use Spring Hibernate or Spring Data JPA and how small of a project this was, I figured that Javalin could help us expose API endpoints to our frontend without the bulk of Spring. This allows enhanced performance and lower costs on AWS at the cost of having to manage the instantiation and configuration of our classes ourselves (which is quite managable for this small of an API).
+We were tasked with creating a Java application that communicated with a MySQL database to store, retrieve and update data about users and a topic of our choice with the constraint that we needed to use raw SQL queries to do so with no ORM or JPA to manage our SQL for us. Given we weren't allowed to use Spring Hibernate or Spring Data JPA and how small of a project this was, I figured that Javalin could help us expose API endpoints to our frontend without the bulk of Spring. This allows enhanced performance and lower costs on AWS at the cost of having to manage the instantiation and configuration of our classes ourselves (which is quite manageable for this small of an API).
 
 We use Javalin to instantiate our application and configure our CORS settings:
 
@@ -94,7 +94,7 @@ a separate package for creating and managing the JSON our Javalin endpoints resp
 
 ### MySQL
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally installed MariaDB instance (the official MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data. 
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a MariaDB instance locally installed to our EC2 instance (the official MySQL package isn't supported on AWS Linux) to create our database schema and seed our database.
 
 ### AWS and Docker
 
@@ -105,6 +105,7 @@ This was an EC2 instance I began using a few months ago with Docker already inst
 ```bash
 docker login ghcr.io
 docker pull ghcr.io/dallasfoley/backend:latest
+docker run -d --env-file .env -p {PORT1}:{PORT2} ghcr.io/dallasfoley/backend:latest
 ```
 
 #### The RDS Instance
@@ -122,6 +123,8 @@ mysql -h my-app-database.xxxxxxxxx.us-east-1.rds.amazonaws.com -u <admin-usernam
 ```
 
 which will prompt us for our password and then give access to a MySQL terminal where we can run `source schema.sql` to give it our schema and seed it with data. We then just make sure connection details are properly managed through our environment variables.
+
+
 
 
 ### HikariCP
