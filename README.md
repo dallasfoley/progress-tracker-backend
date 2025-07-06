@@ -59,24 +59,70 @@ public class BookRoutes {
 }
 ```
 
-Notice for routes that require authentication, we use a custom Middleware class which Javalin runs before the request to check if user provided a valid access token in the Authorization header and returns a 401 if not.
-We also utilize Javalin to configure global headers, create cookies and manage sessions. We also use
+Notice for routes that require authentication, we use a custom Middleware class which Javalin runs before the request to check if user provided a valid access token in the Authorization header and returns a 401 if not. We also utilize Javalin to configure global headers, 
+
+```java
+public static void configure(JavalinConfig config) {
+    config.bundledPlugins.enableCors(cors -> {
+      cors.addRule(it -> {
+        it.allowHost(EnvironmentConfig.FRONTEND_URL);
+        it.allowCredentials = true;
+        it.exposeHeader("Content-Type");
+        it.exposeHeader("Set-Cookie");
+        it.exposeHeader("Authorization");
+        it.exposeHeader("X-Requested-With");
+        it.exposeHeader("Accept");
+        it.exposeHeader("Access-Control-Allow-Origin");
+        it.exposeHeader("Access-Control-Allow-Credentials");
+      });
+    });
+  }
+
+  public static void configureGlobalHeaders(Javalin app) {
+    app.before("/api/*", ctx -> {
+      ctx.contentType("application/json");
+      ctx.header("Access-Control-Allow-Origin", EnvironmentConfig.FRONTEND_URL);
+      ctx.header("Access-Control-Allow-Credentials", "true");
+      ctx.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+      ctx.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+    });
+  }
+```
+
+create cookies and manage sessions. We also use
 a separate package for creating and managing the JSON our Javalin endpoints respond with.
 
-### MySQL and AWS
+### MySQL
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally installed MariaDB instance (the official MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data. To create
-our database, we first needed to copy the .sql file containing our schema to the EC2 instance with
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a locally installed MariaDB instance (the official MySQL package isn't supported on AWS Linux) connected to an AWS RDS MySQL instance to persist and secure our data. 
 
-'''bash
+### AWS and Docker
+
+#### The EC2 Instance
+
+This was an EC2 instance I began using a few months ago with Docker already installed, which already has a separate Java Spring Boot API deployed on a separate Docker container. I simply built the image for my backend locally with `docker build -t backend .`, tagged it with `docker tag backend ghcr.io/dallasfoley/backend:latest`, logged into ghcr.io then pushed it to GitHub's container repository. Then ssh'd into the ec2 instance with the secret key given at creation of the EC2: `ssh -i ~/Downloads/perry.pem <ec2-user@<ec2-instance-ip-address>`, logged into ghcr again, then pulled and ran the container:
+
+```bash
+docker login ghcr.io
+docker pull ghcr.io/dallasfoley/backend:latest
+```
+
+#### The RDS Instance
+
+We ensure that the AWS RDS MySQL instance is created under the same VPC and configure its available ports. To create our database schema, we first needed to copy the .sql file containing our schema to the EC2 instance with
+
+```bash
 scp -i ~/<path-to-private-key>.pem schema.sql ec2-user@<ec2-instance-ip-address>:/home/ec2-user
-'''
+```
 
-We then need to login to our AWS MySQL instance through the EC2 instance
+We then need to log in to our AWS MySQL instance through the EC2 instance 
 
-### Docker
+```bash
+mysql -h my-app-database.xxxxxxxxx.us-east-1.rds.amazonaws.com -u <admin-username> -p
+```
 
-We use Docker to create a containerized environment for our application which allows us to easily deploy it to our AWS EC2 instance, scale, secure and manage the app through Docker commands that allow for reading logs, stopping and running the app. We use Docker Secrets to add an extra layer of security to our environment variables which are then passed to the app at build time. I even have a separate Java backend (with Spring Boot for a Todo App) running on a separate Docker container on the same AWS EC2 instance.
+which will prompt us for our password and then give access to a MySQL terminal where we can run `source schema.sql` to give it our schema and seed it with data. We then just make sure connection details are properly managed through our environment variables.
+
 
 ### HikariCP
 
@@ -110,17 +156,3 @@ We utilize JWTs stored in cookies passed back and forth from client to server. W
 ### Authorization
 
 When a user makes a request to an API route that requires authentication, the Middleware class is run before the request and checks if the user has a valid access token in the Authorization header. If not, we return a 401 status code. When the Next.js proxy layer receives a 401 status code, it will attempt to call the /api/auth/refresh endpoint to get a new access token. If successful, the Next.js proxy layer will retry the request with the new access token, otherwise it will display an error message to the user and redirect them to the home page.
-
-## Security
-
-We utilize Javalin to configure our CORS settings and only allow it to be accessed through requests from our frontend's URL. 
-
-We validate JWTs in Java middleware before each request hits an API route that requires authorization. These JWTs are stored in secure, httpOnly (https-only) cookies so they can only be 
-
-We use Next.js as a proxy layer which helps to keep sensitive information off the client. Docker Secrets is also utilized to securely manage environment variables and pass them into our container at build time adding an extra layer of security.
-
-We use prepared statements to query of database from the DAO layer, protecting from SQL injection.
-
-We use a managed server and managed database where most security threats are already abstracted away.
-
-
