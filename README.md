@@ -8,7 +8,7 @@ For our RESTful API, we have a Java/Javalin app running on an EC2 instance throu
 
 ### Java 17
 
-Java is the primary programming language used for our RESTful API because for one, we were tasked with using Java and two, Java is a great middle ground between high level languages like JavaScript and low level languages like Rust where the language is simple to use (simple syntax, has a garbage collector) but also offers great performance through lower-level features such as memory management, multithreading and being a compiled language. For example, in Node.js or any of the many Python frameworks for server-side development, the code is interpreted and then compiled and then executed line by line where as in Java, the code is compiled at build time and then interpreted and executed at run time - much faster. Java also offers true multithreading, which neither JS or Python support, as well as the benefit of having a large community around it, creating a wide range of tools, libraries, frameworks, discussion and solutions around it.
+Java is the primary programming language used for our RESTful API because for one, we were tasked with using Java and two, Java is a great middle ground between high level languages like JavaScript and low level languages like Rust where the language is simple to use (simple syntax, has a garbage collector) but also offers great performance through lower-level features such as memory management, multithreading and being a compiled language. Java also has the benefit of having a large community around it, creating a wide range of tools, libraries, frameworks, discussion and solutions around it.
 
 ### Javalin
 
@@ -97,7 +97,9 @@ Java JWT is a Java library that allows us to create and validate JWT tokens for 
 
 ## Overall Structure of the Entire Application
 
-We utilize Next.js as a proxy layer between the client and the Javalin server, which allows us to keep all of calls to the Javalin server on the server side which enhances security by hiding sensitive data from the client, validates and sanitizes all user inputs, etc. It also greatly enhances performance by allowing us to caching our statically rendered routes (technically caching their RSC Payload, we also cache the static components of our dynamically rendered routes through Next.js's experimental Partial Prerendering), caching our requests to the Javalin server with its Data Cache along with a few other caching layers detailed in the frontend README.md.
+We have a Next.js application deployed through Vercel, which runs in the client's browser runtime environment as well as on a Node.js runtime environment through serverless functions (basically, AWS Lambda functions spin up managed EC2 instances where you don't need to interact manually with the server, and Vercel adds a layer abstraction on top of this to spin up AWS Lambda Functions through their platform). Our Next.js backend is connected to our Java/Javalin RESTful API deployed on an AWS EC2 instance through a Docker container, which is connected to our MySQL database managed by AWS RDS. 
+Javalin is our backend framework of choice for exposing API routes to our frontend. Given how small of an API this is (4 controllers, 4 DAOs, 3 tables in our SQL schema), it didn't seem necessary to include a service layer between our DAOs and controllers. Our main class creates our DAOs and controllers, configures our CORS, access headers, cookie headers and other headers while the 
+We utilize Next.js as a proxy layer between the client and the Javalin server, which allows us to keep all of the calls to the Javalin server on the server side which enhances security by hiding sensitive data from the client, validates and sanitizes all user inputs, etc. It also greatly enhances performance by allowing us to cache our statically rendered routes (technically caching their RSC Payload, we also cache the static components of our dynamically rendered routes through Next.js's experimental Partial Prerendering), caching our requests to the Javalin server with its Data Cache along with a few other caching layers detailed in the frontend README.md.
 
 ## Authentication and Authorization
 
@@ -110,5 +112,15 @@ We utilize JWTs stored in cookies passed back and forth from client to server. W
 When a user makes a request to an API route that requires authentication, the Middleware class is run before the request and checks if the user has a valid access token in the Authorization header. If not, we return a 401 status code. When the Next.js proxy layer receives a 401 status code, it will attempt to call the /api/auth/refresh endpoint to get a new access token. If successful, the Next.js proxy layer will retry the request with the new access token, otherwise it will display an error message to the user and redirect them to the home page.
 
 ## Security
+
+We utilize Javalin to configure our CORS settings and only allow it to be accessed through requests from our frontend's URL. 
+
+We validate JWTs in Java middleware before each request hits an API route that requires authorization. These JWTs are stored in secure, httpOnly (https-only) cookies so they can only be 
+
+We use Next.js as a proxy layer which helps to keep sensitive information off the client. Docker Secrets is also utilized to securely manage environment variables and pass them into our container at build time adding an extra layer of security.
+
+We use prepared statements to query of database from the DAO layer, protecting from SQL injection.
+
+We use a managed server and managed database where most security threats are already abstracted away.
 
 
