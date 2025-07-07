@@ -24,6 +24,7 @@ We use Javalin to instantiate our application and configure our CORS settings:
         }).get("/", ctx -> ctx.result("Hello World"))
                 .start(EnvironmentConfig.PORT);
 ...
+ }
 ```
 
 We use Javalin to create our API endpoints and run our Middleware:
@@ -59,7 +60,7 @@ public class BookRoutes {
 }
 ```
 
-Notice for routes that require authentication, we use a custom Middleware class which Javalin runs before the request to check if user provided a valid access token in the Authorization header and returns a 401 if not. We also utilize Javalin to configure global headers, 
+Notice for routes that require authentication, we use a custom Middleware class which Javalin runs before the request to check if user provided a valid access token in the Authorization header and returns a 401 if not. We also utilize Javalin to configure global headers,
 
 ```java
 public static void configure(JavalinConfig config) {
@@ -89,8 +90,7 @@ public static void configure(JavalinConfig config) {
   }
 ```
 
-create cookies and manage sessions. We also use
-a separate package for creating and managing the JSON our Javalin endpoints respond with.
+create cookies and manage sessions. We also use a separate package for creating and managing the JSON our Javalin endpoints respond with.
 
 ### MySQL
 
@@ -116,16 +116,54 @@ We ensure that the AWS RDS MySQL instance is created under the same VPC and conf
 scp -i ~/<path-to-private-key>.pem schema.sql ec2-user@<ec2-instance-ip-address>:/home/ec2-user
 ```
 
-We then need to log in to our AWS MySQL instance through the EC2 instance 
+We then need to log in to our AWS MySQL instance through the EC2 instance
 
 ```bash
-mysql -h my-app-database.xxxxxxxxx.us-east-1.rds.amazonaws.com -u <admin-username> -p
+mysql -h <my-app-database>.xxxxxxxxx.us-east-1.rds.amazonaws.com -u <admin-username> -p
 ```
 
 which will prompt us for our password and then give access to a MySQL terminal where we can run `source schema.sql` to give it our schema and seed it with data. We then just make sure connection details are properly managed through our environment variables.
 
+### NGINX
 
+NGINX is a web server that has a variety of use cases. In our case, it acts as a reverse proxy which decrypts incoming HTTPS traffic from our frontend and routes it to the port our Docker container with our Java backend is running on and encrypts outgoing responses.
 
+```.conf
+
+server {
+    listen 80;
+    server_name reading-progress-tracker.duckdns.org;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    server_name reading-progress-tracker.duckdns.org;
+    location / {
+        proxy_pass http://localhost:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/reading-progress-tracker.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/reading-progress-tracker.duckdns.org/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+```
+
+```mermaid
+sequenceDiagram
+    Frontend(Vercel)->>Backend(EC2): HTTPS GET https://<my-duckdns-domain>.duckdns.org
+    Backend(EC2)->>Nginx: Request arrives on port 443
+    Nginx->>Nginx: TLS Termination (decrypts)
+    Nginx->>Docker: HTTP (localhost:<port>)
+    Docker->>Nginx: HTTP Response
+    Nginx->>Nginx: Re-encrypts with TLS
+    Nginx->>Frontend(Vercel): HTTPS Response
+```
 
 ### HikariCP
 
@@ -146,8 +184,8 @@ Java JWT is a Java library that allows us to create and validate JWT tokens for 
 
 ## Overall Structure of the Entire Application
 
-We have a Next.js application deployed through Vercel, which runs in the client's browser runtime environment as well as on a Node.js runtime environment through serverless functions (basically, AWS Lambda functions spin up managed EC2 instances where you don't need to interact manually with the server, and Vercel adds a layer abstraction on top of this to spin up AWS Lambda Functions through their platform). Our Next.js backend is connected to our Java/Javalin RESTful API deployed on an AWS EC2 instance through a Docker container, which is connected to our MySQL database managed by AWS RDS. 
-Javalin is our backend framework of choice for exposing API routes to our frontend. Given how small of an API this is (4 controllers, 4 DAOs, 3 tables in our SQL schema), it didn't seem necessary to include a service layer between our DAOs and controllers. Our main class creates our DAOs and controllers, configures our CORS, access headers, cookie headers and other headers while the 
+We have a Next.js application deployed through Vercel, which runs in the client's browser runtime environment as well as on a Node.js runtime environment through serverless functions (basically, AWS Lambda functions spin up managed EC2 instances where you don't need to interact manually with the server, and Vercel adds a layer abstraction on top of this to spin up AWS Lambda Functions through their platform). Our Next.js backend is connected to our Java/Javalin RESTful API deployed on an AWS EC2 instance through a Docker container, which is connected to our MySQL database managed by AWS RDS.
+Javalin is our backend framework of choice for exposing API routes to our frontend. Given how small of an API this is (4 controllers, 4 DAOs, 3 tables in our SQL schema), it didn't seem necessary to include a service layer between our DAOs and controllers. Our main class creates our DAOs and controllers, configures our CORS, access headers, cookie headers and other headers while the
 We utilize Next.js as a proxy layer between the client and the Javalin server, which allows us to keep all of the calls to the Javalin server on the server side which enhances security by hiding sensitive data from the client, validates and sanitizes all user inputs, etc. It also greatly enhances performance by allowing us to cache our statically rendered routes (technically caching their RSC Payload, we also cache the static components of our dynamically rendered routes through Next.js's experimental Partial Prerendering), caching our requests to the Javalin server with its Data Cache along with a few other caching layers detailed in the frontend README.md.
 
 ## Authentication and Authorization

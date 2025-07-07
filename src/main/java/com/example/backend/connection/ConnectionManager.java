@@ -1,5 +1,6 @@
 package com.example.backend.connection;
 
+import com.example.backend.config.EnvironmentConfig;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.IOException;
@@ -22,15 +23,26 @@ public class ConnectionManager {
 
   private static void initializeDataSource() throws IOException {
 
-    String host = System.getenv("MYSQL_URL");
-    String port = System.getenv("MYSQL_PORT");
-    String db = System.getenv("MYSQL_DB");
-    String username = System.getenv("MYSQL_USERNAME");
-    String password = System.getenv("MYSQL_PASSWORD");
-    // String host = "localhost";
-    // String port = "3306";
-    // String db = "books";
-    // String username = "root";
+    String host;
+    String port;
+    String db;
+    String username;
+    String password;
+
+    if (!EnvironmentConfig.IS_DEV) {
+      host = System.getenv("MYSQL_URL");
+      port = System.getenv("MYSQL_PORT");
+      db = System.getenv("MYSQL_DB");
+      username = System.getenv("MYSQL_USERNAME");
+      password = System.getenv("MYSQL_PASSWORD");
+    } else {
+      host = "localhost";
+      port = "3306";
+      db = "books";
+      username = "root";
+      password = "";
+    }
+
     String jdbcUrl = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&allowPublicKeyRetrieval=true";
     System.out.println("jdbcUrl: " + jdbcUrl);
     System.out.println("Connecting to DB at: " + jdbcUrl);
