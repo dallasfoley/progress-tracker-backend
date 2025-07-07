@@ -60,7 +60,7 @@ public class BookRoutes {
 }
 ```
 
-Notice for routes that require authentication, we use a custom Middleware class which Javalin runs before the request to check if user provided a valid access token in the Authorization header and returns a 401 if not. We also utilize Javalin to configure global headers,
+Notice for routes that require authentication, we use a custom Middleware class (see /src/main/java/.../utils/Middleware.java) which Javalin runs before the request to check if the user provided a valid access token in the Authorization header and returns a 401 if not. We also utilize Javalin to configure CORS headers and global headers,
 
 ```java
 public static void configure(JavalinConfig config) {
@@ -90,22 +90,32 @@ public static void configure(JavalinConfig config) {
   }
 ```
 
-create cookies and manage sessions. We also use a separate package for creating and managing the JSON our Javalin endpoints respond with.
+create cookies and manage sessions. We also use a separate package for creating and managing the JSON our Javalin endpoints receive on request and respond with.
 
 ### MySQL
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a MariaDB instance locally installed to our EC2 instance (the official MySQL package isn't supported on AWS Linux) to communicate with our AWS RDS MySQL database to create the schema and seed the database.
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. To provide our AWS RDS MySQL database with our schema and seed data in production, we need to access it from the EC2 instance since they are under the same VPC and security group. Once ssh'd into our EC2 instance we use a MariaDB instance locally installed to our EC2 instance (the official MySQL package isn't supported on AWS Linux) to communicate with our AWS RDS MySQL database to create the schema and seed the database. 
 
 ### AWS and Docker
 
 #### The EC2 Instance
 
-This was an EC2 instance I began using a few months ago with Docker already installed, which already has a separate Java Spring Boot API deployed on a separate Docker container. I simply built the image for my backend locally with `docker build -t backend .`, tagged it with `docker tag backend ghcr.io/dallasfoley/backend:latest`, logged into ghcr.io then pushed it to GitHub's container repository. Then ssh'd into the ec2 instance with the secret key given at creation of the EC2: `ssh -i ~/<path-to-private-key> <ec2-user@<ec2-instance-ip-address>`, logged into ghcr again, then pulled and ran the container:
+This was an EC2 instance I began using a few months ago with Docker already installed, which already has a separate Java Spring Boot API deployed on a separate Docker container. I simply built the image for my backend locally with `docker build -t backend .`, tagged it with `docker tag backend ghcr.io/dallasfoley/progress-tracker-backend:latest`, logged into ghcr.io ( with `docker login ghcr.io/dallasfoley` then provide Github PAT) then pushed it (`docker push ...`) to GitHub's container repository. Then ssh'd into the EC2 instance with the secret key given at creation of the EC2: `ssh -i ~/<path-to-private-key> <ec2-user@<ec2-instance-ip-address>`, logged into ghcr again, then pulled and ran the container:
 
 ```bash
 docker login ghcr.io
-docker pull ghcr.io/dallasfoley/backend:latest
-docker run -d --env-file .env -p {PORT1}:{PORT2} ghcr.io/dallasfoley/backend:latest
+docker pull ghcr.io/dallasfoley/progress-tracker-backend:latest
+docker run -d --env-file .env -p 127.0.0.1:8081:8081 ghcr.io/progress-tracker-dallasfoley/backend:latest
+```
+
+In the above `docker run` call, our -d and --env-file flags run our container in detached mode, pass the path of .env file, respectively. We pass 127.0.0.1: as a prefix to our ports to only allow the container to be accessed through the EC2's localhost. Containers are managed with:
+
+```bash
+docker ps    # view running containers
+docker stop <container_id>    #  stop a container
+docker logs <container_id>    #  view a container's logs
+docker exec -it <container_id> /bin/bash   #  access running container's shell for debugging
+docker inspect <container_id>    #  view container configuration and networking info
 ```
 
 #### The RDS Instance
@@ -122,7 +132,7 @@ We then need to log in to our AWS MySQL instance through the EC2 instance
 mysql -h <my-app-database>.xxxxxxxxx.us-east-1.rds.amazonaws.com -u <admin-username> -p
 ```
 
-which will prompt us for our password and then give access to a MySQL terminal where we can run `source schema.sql` to give it our schema and seed it with data. We then just make sure connection details are properly managed through our environment variables.
+which will prompt us for our password and then give access to a MySQL terminal where we can run `source schema.sql` to give it our schema and seed it with data. (This could've been done in one less step, but is what it is.) We then just make sure all connection details are properly managed through our environment variables to allow our Javalin API to connect to the AWS MySQL database.
 
 ### NGINX
 
@@ -177,7 +187,7 @@ sudo systemctl reload nginx
 
 ### DuckDNS
 
-This a website that allows us the use a subdomain of their site for essentially a free domain. This allows us to not worry about our backend URL giving away any information about our EC2 instance, as NGINX decrypts HTTPS traffic to the URL DuckDNS gives us, which then reroutes to our Docker container running our Java app.
+This is a website that allows us to use a subdomain of their site for essentially a free domain. This allows us to not worry about our backend URL giving away any information about our EC2 instance, as NGINX decrypts HTTPS traffic to the URL DuckDNS gives us, which NGINX then reroutes to our Docker container running locally on the EC2 instance, running our Java app. It also allows us not to worry about paying for a domain for our backend, while a free-tier Vercel account allows a free https vercel subdomain for the BFF frontend; I'm also using AWS free-tier, so the frontend and backend are both deployed completely for free :D
 
 ### Certbot
 
@@ -185,13 +195,13 @@ Automates the process of obtaining and renewing Let's Encrypt certificates for w
 
 1. Certbot validates domain ownership
 2. Downloads certificates and stores them in /etc/letsencrypt/
-3. Modifies nginx config to include SSL certificate paths
-4. Reloads nginx to apply changes
-5. Sets up automatic renewal via cron job
+3. Modifies NGINX config to include SSL certificate paths
+4. Reloads NGINX to apply changes
+5. Sets up automatic renewal via cronjob
 
 ### HikariCP
 
-HikariCP gives us a connection pool for MySQL which allows us to manage multiple connections to the database at once and reuse them if possible, helping to optimize performance and resource usage.
+HikariCP gives us a connection pool for MySQL, which allows us to manage multiple connections to the database at once and reuse them if possible, helping to optimize performance and resource usage.
 
 ### SLF4J
 
