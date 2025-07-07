@@ -175,6 +175,20 @@ In my case, it sits in a secure file in my `.conf` folder along with the NGINX c
 sudo systemctl reload nginx
 ```
 
+### DuckDNS
+
+This a website that allows us the use a subdomain of their site for essentially a free domain. This allows us to not worry about our backend URL giving away any information about our EC2 instance, as NGINX decrypts HTTPS traffic to the URL DuckDNS gives us, which then reroutes to our Docker container running our Java app.
+
+### Certbot
+
+Automates the process of obtaining and renewing Let's Encrypt certificates for websites, enabling HTTPS encryption (for subsequent NGINX decryption on request and NGINX encryption on response). Using `certbot --nginx -d <my-duckdns-domain>.duckdns.org`:
+
+1. Certbot validates domain ownership
+2. Downloads certificates and stores them in /etc/letsencrypt/
+3. Modifies nginx config to include SSL certificate paths
+4. Reloads nginx to apply changes
+5. Sets up automatic renewal via cron job
+
 ### HikariCP
 
 HikariCP gives us a connection pool for MySQL which allows us to manage multiple connections to the database at once and reuse them if possible, helping to optimize performance and resource usage.
