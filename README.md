@@ -126,18 +126,22 @@ which will prompt us for our password and then give access to a MySQL terminal w
 
 ### NGINX
 
-NGINX is a web server that has a variety of use cases. In our case, it acts as a reverse proxy which decrypts incoming HTTPS traffic from our frontend and routes it to the port our Docker container with our Java backend is running on and encrypts outgoing responses.
+NGINX is a web server that has a variety of use cases. In our case, it acts as a reverse proxy which decrypts incoming HTTPS traffic from our frontend and routes it to the port our Docker container with our Java backend is running on and encrypts outgoing responses. We create the file and configure NGINX with:
+
+```
+sudo nano /etc/nginx/conf.d/reading-progress-tracker.conf
+```
 
 ```.conf
 
 server {
     listen 80;
-    server_name reading-progress-tracker.duckdns.org;
+    server_name <my-duckdns-url>.duckdns.org;
     return 301 https://$host$request_uri;
 }
 
 server {
-    server_name reading-progress-tracker.duckdns.org;
+    server_name <my-duckdns-url>.duckdns.org;
     location / {
         proxy_pass http://localhost:8081;
         proxy_set_header Host $host;
@@ -146,15 +150,13 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
     listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/reading-progress-tracker.duckdns.org/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/reading-progress-tracker.duckdns.org/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/<my-duckdns-url>.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<my-duckdns-url>.duckdns.org/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
 ```
-
-In my case, it sits in a secure file in my `.conf` folder along with the NGINX config for a separate app, which are both loaded in by the main `.conf` file:
 
 ```mermaid
 sequenceDiagram
@@ -167,15 +169,10 @@ sequenceDiagram
     Nginx->>Frontend(Vercel): HTTPS Response
 ```
 
-```mermaid
+In my case, it sits in a secure file in my `.conf` folder along with the NGINX config for a separate app, which are both loaded in by the main `.conf` file after
 
-graph TD
-    A[nginx.conf] -->|includes| B[conf.d/*.conf]
-    A -->|references| C[MIME types]
-    B --> D[todo135.conf]
-    B --> E[reading-progress.conf]
-    D -->|uses| F[/etc/letsencrypt/certs]
-    E -->|uses| F
+```bash
+sudo systemctl reload nginx
 ```
 
 ### HikariCP
