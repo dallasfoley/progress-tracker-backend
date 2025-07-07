@@ -1,8 +1,12 @@
 # Progress Tracker Backend
 
-## The backend for a Reading Progress Tracker application
+### The backend for a Reading Progress Tracker application
 
-For our RESTful API, we have a Java/Javalin app running on an EC2 instance through a docker container connected to an AWS RDS MySQL instance.
+## Overall Structure of the Entire Application
+
+We have a Next.js application deployed through Vercel, which runs in the client's browser runtime environment as well as on a Node.js runtime environment through serverless functions (basically, AWS Lambda functions spin up managed EC2 instances where you don't need to interact manually with the server, and Vercel adds a layer abstraction on top of this to spin up AWS Lambda Functions through their platform). Our Next.js backend is connected to our Java/Javalin RESTful API deployed on an AWS EC2 instance through a Docker container, which is connected to our MySQL database managed by AWS RDS.
+Javalin is our backend framework of choice for exposing API routes to our frontend. Given how small of an API this is (4 controllers, 4 DAOs, 3 tables in our SQL schema), it didn't seem necessary to include a service layer between our DAOs and controllers. Our main class creates our DAOs and controllers, configures our CORS, access headers, cookie headers and other headers while the
+We utilize Next.js as a proxy layer between the client and the Javalin server, which allows us to keep all of the calls to the Javalin server on the server side which enhances security by hiding sensitive data from the client, validates and sanitizes all user inputs, etc. It also greatly enhances performance by allowing us to cache our statically rendered routes (technically caching their RSC Payload, we also cache the static components of our dynamically rendered routes through Next.js's experimental Partial Prerendering), caching our requests to the Javalin server with its Data Cache along with a few other caching layers detailed in the frontend README.md.
 
 ## Technologies Used
 
@@ -48,7 +52,6 @@ public class BookRoutes {
     BookDAOImpl bookDAO = new BookDAOImpl();
     BookController bookController = new BookController(bookDAO);
     app.before("/api/books", Middleware::requireAuth);
-    app.before("/api/books/*", Middleware::requireAuth);
     app.before("/api/books/<id>", Middleware::requireAuth);
     app.get("/api/books", bookController::findAll);
     app.get("/api/books/<id>", bookController::findBookById);
@@ -94,7 +97,7 @@ create cookies and manage sessions. We also use a separate package for creating 
 
 ### MySQL
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. To provide our AWS RDS MySQL database with our schema and seed data in production, we need to access it from the EC2 instance since they are under the same VPC and security group. Once ssh'd into our EC2 instance we use a MariaDB instance locally installed to our EC2 instance (the official MySQL package isn't supported on AWS Linux) to communicate with our AWS RDS MySQL database to create the schema and seed the database. 
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. To provide our AWS RDS MySQL database with our schema and seed data in production, we need to access it from the EC2 instance since they are under the same VPC and security group. Once ssh'd into our EC2 instance, we use a MariaDB instance locally installed to our EC2 instance (the official MySQL package isn't supported on AWS Linux) to communicate with our AWS RDS MySQL database to create the schema and seed the database. More on this below.
 
 ### AWS and Docker
 
@@ -120,10 +123,10 @@ docker inspect <container_id>    #  view container configuration and networking 
 
 #### The RDS Instance
 
-We ensure that the AWS RDS MySQL instance is created under the same VPC and configure its available ports. To create our database schema, we first needed to copy the .sql file containing our schema to the EC2 instance with
+RDS instances are typically placed in private subnets with restricted network access for security. We ensure that the AWS RDS MySQL instance is created under the same VPC as the EC2 instance and configure its available ports. The RDS instance is completely managed by AWS: we cannot directly access the server ourselves. However, with MariaDB installed locally on the EC2 instance, we can use the `mysql` terminal command to log in to the RDS database and send SQL commands to it from the EC2 instance. We first need to copy our schema file from our local files to our EC2 instance, which requires the `.pem` key.
 
 ```bash
-scp -i ~/<path-to-private-key>.pem schema.sql ec2-user@<ec2-instance-ip-address>:/home/ec2-user
+scp -i ~/<path-to-private-key>.pem <path-to-schema-file>.sql ec2-user@<ec2-instance-ip-address>:/home/ec2-user
 ```
 
 We then need to log in to our AWS MySQL instance through the EC2 instance
@@ -132,11 +135,11 @@ We then need to log in to our AWS MySQL instance through the EC2 instance
 mysql -h <my-app-database>.xxxxxxxxx.us-east-1.rds.amazonaws.com -u <admin-username> -p
 ```
 
-which will prompt us for our password and then give access to a MySQL terminal where we can run `source schema.sql` to give it our schema and seed it with data. (This could've been done in one less step, but is what it is.) We then just make sure all connection details are properly managed through our environment variables to allow our Javalin API to connect to the AWS MySQL database.
+which will prompt us for our password and then provide an interface to send SQL commands over the network.  Then run `source schema.sql` to give it our schema and seed it with data. (This could've been done in one less step, but is what it is.) We then just make sure all connection details are properly managed through our environment variables to allow our Javalin API to connect to the AWS MySQL database.
 
 ### NGINX
 
-NGINX is a web server that has a variety of use cases. In our case, it acts as a reverse proxy which decrypts incoming HTTPS traffic from our frontend and routes it to the port our Docker container with our Java backend is running on and encrypts outgoing responses. We create the file and configure NGINX with:
+NGINX is a web server that has a variety of use cases. In our case, it acts as a reverse proxy that decrypts incoming HTTPS traffic from our frontend and routes it to the Docker container that our Java backend is running on, and encrypts outgoing responses. We create the file and configure NGINX with:
 
 ```
 sudo nano /etc/nginx/conf.d/reading-progress-tracker.conf
@@ -179,7 +182,7 @@ sequenceDiagram
     Nginx->>Frontend(Vercel): HTTPS Response
 ```
 
-In my case, it sits in a secure file in my `.conf` folder along with the NGINX config for a separate app, which are both loaded in by the main `.conf` file after
+In this case, the conf file sits in my `.conf` folder along with the NGINX config for a separate app, which are both loaded in by the main `.conf` file after
 
 ```bash
 sudo systemctl reload nginx
@@ -214,13 +217,7 @@ is necessary for us to send and receive JSON data from our endpoints.
 
 ### Java JWT
 
-Java JWT is a Java library that allows us to create and validate JWT tokens for user authentication and authorization.
-
-## Overall Structure of the Entire Application
-
-We have a Next.js application deployed through Vercel, which runs in the client's browser runtime environment as well as on a Node.js runtime environment through serverless functions (basically, AWS Lambda functions spin up managed EC2 instances where you don't need to interact manually with the server, and Vercel adds a layer abstraction on top of this to spin up AWS Lambda Functions through their platform). Our Next.js backend is connected to our Java/Javalin RESTful API deployed on an AWS EC2 instance through a Docker container, which is connected to our MySQL database managed by AWS RDS.
-Javalin is our backend framework of choice for exposing API routes to our frontend. Given how small of an API this is (4 controllers, 4 DAOs, 3 tables in our SQL schema), it didn't seem necessary to include a service layer between our DAOs and controllers. Our main class creates our DAOs and controllers, configures our CORS, access headers, cookie headers and other headers while the
-We utilize Next.js as a proxy layer between the client and the Javalin server, which allows us to keep all of the calls to the Javalin server on the server side which enhances security by hiding sensitive data from the client, validates and sanitizes all user inputs, etc. It also greatly enhances performance by allowing us to cache our statically rendered routes (technically caching their RSC Payload, we also cache the static components of our dynamically rendered routes through Next.js's experimental Partial Prerendering), caching our requests to the Javalin server with its Data Cache along with a few other caching layers detailed in the frontend README.md.
+Java JWT is a Java library that allows us to create and validate JWT tokens for user authentication and authorization
 
 ## Authentication and Authorization
 
