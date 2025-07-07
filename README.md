@@ -94,13 +94,13 @@ create cookies and manage sessions. We also use a separate package for creating 
 
 ### MySQL
 
-We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a MariaDB instance locally installed to our EC2 instance (the official MySQL package isn't supported on AWS Linux) to create our database schema and seed our database.
+We use MySQL as our relational database for storing, reading and updating data in development and production. In development, we use a locally installed MySQL Server and MySQL Workbench to manage our database. In production, we use a MariaDB instance locally installed to our EC2 instance (the official MySQL package isn't supported on AWS Linux) to communicate with our AWS RDS MySQL database to create the schema and seed the database.
 
 ### AWS and Docker
 
 #### The EC2 Instance
 
-This was an EC2 instance I began using a few months ago with Docker already installed, which already has a separate Java Spring Boot API deployed on a separate Docker container. I simply built the image for my backend locally with `docker build -t backend .`, tagged it with `docker tag backend ghcr.io/dallasfoley/backend:latest`, logged into ghcr.io then pushed it to GitHub's container repository. Then ssh'd into the ec2 instance with the secret key given at creation of the EC2: `ssh -i ~/Downloads/perry.pem <ec2-user@<ec2-instance-ip-address>`, logged into ghcr again, then pulled and ran the container:
+This was an EC2 instance I began using a few months ago with Docker already installed, which already has a separate Java Spring Boot API deployed on a separate Docker container. I simply built the image for my backend locally with `docker build -t backend .`, tagged it with `docker tag backend ghcr.io/dallasfoley/backend:latest`, logged into ghcr.io then pushed it to GitHub's container repository. Then ssh'd into the ec2 instance with the secret key given at creation of the EC2: `ssh -i ~/<path-to-private-key> <ec2-user@<ec2-instance-ip-address>`, logged into ghcr again, then pulled and ran the container:
 
 ```bash
 docker login ghcr.io
