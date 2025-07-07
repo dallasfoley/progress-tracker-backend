@@ -154,6 +154,8 @@ server {
 
 ```
 
+In my case, it sits in a secure file in my `.conf` folder along with the NGINX config for a separate app, which are both loaded in by the main `.conf` file:
+
 ```mermaid
 sequenceDiagram
     Frontend(Vercel)->>Backend(EC2): HTTPS GET https://<my-duckdns-domain>.duckdns.org
@@ -163,6 +165,17 @@ sequenceDiagram
     Docker->>Nginx: HTTP Response
     Nginx->>Nginx: Re-encrypts with TLS
     Nginx->>Frontend(Vercel): HTTPS Response
+```
+
+```mermaid
+
+graph TD
+    A[nginx.conf] -->|includes| B[conf.d/*.conf]
+    A -->|references| C[MIME types]
+    B --> D[todo135.conf]
+    B --> E[reading-progress.conf]
+    D -->|uses| F[/etc/letsencrypt/certs]
+    E -->|uses| F
 ```
 
 ### HikariCP
