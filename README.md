@@ -4,7 +4,8 @@
 
 ## Overall Structure of the Entire Application
 
-![alt text](/src/main/resources/assets/progress-tracker-backend-diagram.png)
+![reading-progress-tracker-diagram](https://github.com/user-attachments/assets/0ec39ce0-22c9-49a6-ba69-1952b49e6ef8)
+
 
 We have a Next.js application deployed through Vercel, which runs in the client's browser runtime environment as well as on a Node.js runtime environment through serverless functions (basically, AWS Lambda functions spin up managed EC2 instances where you don't need to interact manually with the server, and Vercel adds a layer abstraction on top of this to spin up AWS Lambda Functions through their platform). Our Next.js backend is connected to our Java/Javalin RESTful API deployed on an AWS EC2 instance through a Docker container, which is connected to our MySQL database managed by AWS RDS.
 Javalin is our backend framework of choice for exposing API routes to our frontend. Given how small of an API this is (4 controllers, 4 DAOs, 3 tables in our SQL schema), it didn't seem necessary to include a service layer between our DAOs and controllers. Our main class creates our DAOs and controllers, configures our CORS, access headers, cookie headers and other headers while the
