@@ -2,6 +2,8 @@
 
 ### The backend for a Reading Progress Tracker application
 
+Feontend: https://github.com/dallasfoley/progress-tracker-frontend
+
 ## Overall Structure of the Entire Application
 
 ![reading-progress-tracker-diagram](https://github.com/user-attachments/assets/0ec39ce0-22c9-49a6-ba69-1952b49e6ef8)
